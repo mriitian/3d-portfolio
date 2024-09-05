@@ -14,6 +14,9 @@ import {
     mongodb,
     git,
     figma,
+    racing,
+    techfest,
+    bizup,
     docker,
     meta,
     starbucks,
@@ -46,7 +49,7 @@ import {
       icon: web,
     },
     {
-      title: "React Native Developer",
+      title: "Game Developer",
       icon: mobile,
     },
     {
@@ -108,66 +111,51 @@ import {
       name: "figma",
       icon: figma,
     },
-    {
-      name: "docker",
-      icon: docker,
-    },
   ];
   
   const experiences = [
     {
-      title: "React.js Developer",
-      company_name: "Starbucks",
-      icon: starbucks,
+      title: "Content Editor and Analyst",
+      company_name: "BIZ-UP",
+      icon: bizup,
       iconBg: "#383E56",
-      date: "March 2020 - April 2021",
+      date: "Dec 2023 - Feb 2024",
       points: [
-        "Developing and maintaining web applications using React.js and other related technologies.",
-        "Collaborating with cross-functional teams including designers, product managers, and other developers to create high-quality products.",
-        "Implementing responsive design and ensuring cross-browser compatibility.",
-        "Participating in code reviews and providing constructive feedback to other developers.",
+        "Collaborated in a team of 3 alongside managers to streamline the WhatsApp catalogue automation process.",
+        "Reduced the processing time from 3 hours to 30 minutes by leveraging JavaScript to automate catalog extraction.",
+        "Analyzed 120K+ data points, including CTR, clicks, and viewership using advanced Excel features.",
+        "Contributed to the business & operations module by efficiently tagging prices and features of 50+ businesses.",
       ],
     },
     {
-      title: "React Native Developer",
-      company_name: "Tesla",
-      icon: tesla,
+      title: "Design and Creatives Coordinator",
+      company_name: "Techfest, IIT Bombay",
+      icon: techfest,
       iconBg: "#E6DEDD",
-      date: "Jan 2021 - Feb 2022",
+      date: "Mar 2023 - Feb 2024",
       points: [
-        "Developing and maintaining web applications using React.js and other related technologies.",
-        "Collaborating with cross-functional teams including designers, product managers, and other developers to create high-quality products.",
-        "Implementing responsive design and ensuring cross-browser compatibility.",
-        "Participating in code reviews and providing constructive feedback to other developers.",
+        "Created visually appealing content, generating over 130k+ views on the Techfest Instagram within 2-3 weeks.",
+        "Significantly contributed to the design and ideation process for the official website of Techfest 2023.",
+        "Designed interactive Competition Cards & Gallery Carousel, visually presenting essential competition details.",
+        "Utilized industry-standard software tools like Figma, Dora, and Photoshop to refine the UI of the website.",
+        "Produced and edited promotional videos for Techfest 2023, including Theme Guessing, Theme Release, and College Ambassador Program Announcements.",
       ],
     },
     {
-      title: "Web Developer",
-      company_name: "Shopify",
-      icon: shopify,
+      title: "Marketing Trainee",
+      company_name: "IIT Bombay Racing Team",
+      icon: racing,
       iconBg: "#383E56",
-      date: "Jan 2022 - Jan 2023",
+      date: "Feb 2023 - Jan 2024",
       points: [
-        "Developing and maintaining web applications using React.js and other related technologies.",
-        "Collaborating with cross-functional teams including designers, product managers, and other developers to create high-quality products.",
-        "Implementing responsive design and ensuring cross-browser compatibility.",
-        "Participating in code reviews and providing constructive feedback to other developers.",
-      ],
-    },
-    {
-      title: "Full stack Developer",
-      company_name: "Meta",
-      icon: meta,
-      iconBg: "#E6DEDD",
-      date: "Jan 2023 - Present",
-      points: [
-        "Developing and maintaining web applications using React.js and other related technologies.",
-        "Collaborating with cross-functional teams including designers, product managers, and other developers to create high-quality products.",
-        "Implementing responsive design and ensuring cross-browser compatibility.",
-        "Participating in code reviews and providing constructive feedback to other developers.",
+        "Selected from 30+ candidates after a rigorous selection process including an assignment and interview.",
+        "Proficiently created responsive pages for the Achievements and Contact Us pages for the IITB Racing website.",
+        "Categorized and databased companies across diverse categories such as F&B, nuts and bolts, and logistics.",
+        "Secured first place in the team Presentation Competition, excelling in Presentation & Representation.",
       ],
     },
   ];
+  
   
   const testimonials = [
     {
