@@ -28,6 +28,7 @@ import {
     threejs,
     cafirm,
     promptlib,
+    hospi,
   } from "../assets";
   
   export const navLinks = [
@@ -249,6 +250,27 @@ import {
       ],
       image: tripguide,
       source_code_link: "https://github.com/",
+    },
+    {
+      name: "A Hospital Website",
+      description:
+        "The hospital website, built using ReactJS with React-Bootstrap, features a clean and modern design, providing a user-friendly interface to navigate the hospital's services and information.",
+      tags: [
+        {
+          name: "ReactJs",
+          color: "blue-text-gradient",
+        },
+        {
+          name: "react-bootstrap",
+          color: "green-text-gradient",
+        },
+        {
+          name: "RestApi",
+          color: "pink-text-gradient",
+        },
+      ],
+      image: hospi,
+      source_code_link: "https://github.com/mriitian/Hospital-Website",
     },
   ];
   

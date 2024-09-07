@@ -1,4 +1,4 @@
-import logo from "./logo.svg";
+import logo from "./logo.png";
 import backend from "./backend.png";
 import creator from "./creator.png";
 import mobile from "./mobile.png";
@@ -33,6 +33,7 @@ import jobit from "./jobit.png";
 import tripguide from "./tripguide.png";
 import cafirm from "./cafirm.png"
 import promptlib from "./promptlib.png"
+import hospi from "./hospi.png"
 
 export {
   logo,
@@ -67,5 +68,6 @@ export {
   jobit,
   tripguide,
   cafirm,
-  promptlib
+  promptlib,
+  hospi
 };
