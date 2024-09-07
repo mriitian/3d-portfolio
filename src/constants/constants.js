@@ -26,6 +26,8 @@ import {
     jobit,
     tripguide,
     threejs,
+    cafirm,
+    promptlib,
   } from "../assets";
   
   export const navLinks = [
@@ -186,9 +188,9 @@ import {
   
   const projects = [
     {
-      name: "Car Rent",
+      name: "CA Firm",
       description:
-        "Web-based platform that allows users to search, book, and manage car rentals from various providers, providing a convenient and efficient solution for transportation needs.",
+        "A professional website for a Chartered Accounting (CA) firm, designed with a modern, responsive layout that enhances user experience and engagement.",
       tags: [
         {
           name: "react",
@@ -199,33 +201,33 @@ import {
           color: "green-text-gradient",
         },
         {
-          name: "tailwind",
+          name: "django",
           color: "pink-text-gradient",
         },
       ],
-      image: carrent,
-      source_code_link: "https://github.com/",
+      image: cafirm,
+      source_code_link: "https://github.com/mriitian/ca-firm",
     },
     {
-      name: "Job IT",
+      name: "AI Prompt Library",
       description:
-        "Web application that enables users to search for job openings, view estimated salary ranges for positions, and locate available jobs based on their current location.",
+        "AI Prompt Library platform using Next.js, where users can discover, create, and share AI-powered prompts. The platform features secure Google Auth for easy user sign-in.",
       tags: [
         {
-          name: "react",
+          name: "NextJs",
           color: "blue-text-gradient",
         },
         {
-          name: "restapi",
+          name: "TailwindCSS",
           color: "green-text-gradient",
         },
         {
-          name: "scss",
+          name: "GoogleOauth",
           color: "pink-text-gradient",
         },
       ],
-      image: jobit,
-      source_code_link: "https://github.com/",
+      image: promptlib,
+      source_code_link: "https://github.com/mriitian/next-app",
     },
     {
       name: "Trip Guide",
@@ -237,7 +239,7 @@ import {
           color: "blue-text-gradient",
         },
         {
-          name: "supabase",
+          name: "mongoDB",
           color: "green-text-gradient",
         },
         {
