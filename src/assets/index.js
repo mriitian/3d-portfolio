@@ -20,9 +20,9 @@ import redux from "./tech/redux.png";
 import tailwind from "./tech/tailwind.png";
 import typescript from "./tech/typescript.png";
 import threejs from "./tech/threejs.svg";
-import bizup from "./company/bizup.jpg"
-import techfest from "./company/techfest.png"
-import racing from "./company/racing.png"
+import bizup from "./company/bizup.jpg";
+import techfest from "./company/techfest.png";
+import racing from "./company/racing.png";
 import meta from "./company/meta.png";
 import shopify from "./company/shopify.png";
 import starbucks from "./company/starbucks.png";
@@ -31,9 +31,10 @@ import tesla from "./company/tesla.png";
 import carrent from "./carrent.png";
 import jobit from "./jobit.png";
 import tripguide from "./tripguide.png";
-import cafirm from "./cafirm.png"
-import promptlib from "./promptlib.png"
-import hospi from "./hospi.png"
+import cafirm from "./cafirm.png";
+import promptlib from "./promptlib.png";
+import hospi from "./hospi.png";
+import dashboard from "./dashboard.png";
 
 export {
   logo,
@@ -69,5 +70,6 @@ export {
   tripguide,
   cafirm,
   promptlib,
-  hospi
+  hospi,
+  dashboard,
 };

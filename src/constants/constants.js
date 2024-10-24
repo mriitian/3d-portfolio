@@ -29,6 +29,7 @@ import {
   cafirm,
   promptlib,
   hospi,
+  dashboard,
 } from "../assets";
 
 export const navLinks = [
@@ -247,7 +248,7 @@ const projects = [
         color: "pink-text-gradient",
       },
     ],
-    image: tripguide,
+    image: dashboard,
     source_code_link: "https://dashboard-react-1.vercel.app/",
   },
   {
