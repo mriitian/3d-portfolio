@@ -30,6 +30,7 @@ import {
   promptlib,
   hospi,
   dashboard,
+  chatapp,
 } from "../assets";
 
 export const navLinks = [
@@ -271,6 +272,27 @@ const projects = [
     ],
     image: hospi,
     source_code_link: "https://github.com/mriitian/Hospital-Website",
+  },
+  {
+    name: "A Dynamic Chatting App",
+    description:
+      "A Dynamic Chatting application built using ReactJS, NodeJS, Express Server and used Socket.io for the chat sockets, MongoDB for Database Management",
+    tags: [
+      {
+        name: "ReactJs",
+        color: "blue-text-gradient",
+      },
+      {
+        name: "REST-API",
+        color: "green-text-gradient",
+      },
+      {
+        name: "NodeJs",
+        color: "pink-text-gradient",
+      },
+    ],
+    image: chatapp,
+    source_code_link: "https://github.com/mriitian/X-Chatt",
   },
 ];
 

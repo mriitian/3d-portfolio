@@ -35,6 +35,7 @@ import cafirm from "./cafirm.png";
 import promptlib from "./promptlib.png";
 import hospi from "./hospi.png";
 import dashboard from "./dashboard.png";
+import chatapp from "./chatapp.png";
 
 export {
   logo,
@@ -72,4 +73,5 @@ export {
   promptlib,
   hospi,
   dashboard,
+  chatapp,
 };
