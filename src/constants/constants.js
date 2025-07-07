@@ -17,6 +17,7 @@ import {
   racing,
   techfest,
   bizup,
+  mapit,
   docker,
   meta,
   starbucks,
@@ -31,6 +32,7 @@ import {
   hospi,
   dashboard,
   chatapp,
+  snatched,
 } from "../assets";
 
 export const navLinks = [
@@ -119,6 +121,18 @@ const technologies = [
 ];
 
 const experiences = [
+  {
+    title: "Frontend Developer",
+    company_name: "MapIT.ai",
+    icon: mapit,
+    iconBg: "#DDE6ED",
+    date: "Dec 2024 - Mar 2025",
+    points: [
+      "Collaborated in a team of developers alongside managers to create and improve the UI for Makerspace Inventory.",
+      "Used ReactJS and MUI's MediaQuery to make dashboard elements responsive across all screen sizes.",
+      "Developed the UI for the Workshops page, handled API calls, integrated backend data, and refined the layout.",
+    ],
+  },
   {
     title: "Content Editor and Analyst",
     company_name: "BIZ-UP",
@@ -293,6 +307,47 @@ const projects = [
     ],
     image: chatapp,
     source_code_link: "https://github.com/mriitian/X-Chatt",
+  },
+  {
+    name: "Snatched E-commerce Platform",
+    description:
+      "A full-stack e-commerce web application with user authentication (Google OAuth & JWT), secure session management, product search, dynamic cart, wishlist, and order tracking. Built with a modern Vite + React + ShadCN UI frontend and a Node.js + Express backend integrated with MongoDB.",
+    tags: [
+      {
+        name: "React",
+        color: "blue-text-gradient",
+      },
+      {
+        name: "Vite",
+        color: "green-text-gradient",
+      },
+      {
+        name: "ShadCN",
+        color: "pink-text-gradient",
+      },
+      {
+        name: "Node.js",
+        color: "blue-text-gradient",
+      },
+      {
+        name: "Express",
+        color: "green-text-gradient",
+      },
+      {
+        name: "MongoDB",
+        color: "pink-text-gradient",
+      },
+      {
+        name: "JWT",
+        color: "blue-text-gradient",
+      },
+      {
+        name: "Google OAuth",
+        color: "green-text-gradient",
+      },
+    ],
+    image: snatched, // replace with your imported image asset
+    source_code_link: "https://github.com/mriitian/snatched", // adjust as needed
   },
 ];
 

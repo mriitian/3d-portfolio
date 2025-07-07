@@ -21,6 +21,7 @@ import tailwind from "./tech/tailwind.png";
 import typescript from "./tech/typescript.png";
 import threejs from "./tech/threejs.svg";
 import bizup from "./company/bizup.jpg";
+import mapit from "./company/mapit.png";
 import techfest from "./company/techfest.png";
 import racing from "./company/racing.png";
 import meta from "./company/meta.png";
@@ -36,6 +37,7 @@ import promptlib from "./promptlib.png";
 import hospi from "./hospi.png";
 import dashboard from "./dashboard.png";
 import chatapp from "./chatapp.png";
+import snatched from "./snatched.png";
 
 export {
   logo,
@@ -74,4 +76,6 @@ export {
   hospi,
   dashboard,
   chatapp,
+  mapit,
+  snatched,
 };
