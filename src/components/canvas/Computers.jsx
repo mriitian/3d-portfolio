@@ -5,17 +5,17 @@ import React, { Suspense, useEffect, useState } from "react";
 import CanvasLoader from "../Loader";
 
 const Computers = ({ isMobile }) => {
-  const computer = useGLTF("./desktop_pc/scene.gltf");
+  const computer = useGLTF("./pc3/pc.gltf");
 
   return (
     <mesh>
-      <hemisphereLight intensity={0.15} groundColor="black" />
-      <pointLight intensity={1} />
+      <hemisphereLight intensity={0.5} groundColor="black" />
+      <pointLight intensity={0.5} />
       <spotLight
-        position={[-3, 5, 1]}
+        position={[-12, 5, 1]}
         angle={1}
         penumbra={1}
-        intensity={300}
+        intensity={500}
         castShadow
         shadow-mapSize={1024}
       />
