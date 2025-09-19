@@ -2,6 +2,7 @@ import React from "react";
 import { motion } from "framer-motion";
 import { styles } from "../styles";
 import { ComputersCanvas } from "./canvas";
+import { profile } from "../assets";
 
 const Hero = () => {
   return (
@@ -22,7 +23,7 @@ const Hero = () => {
             <br className="sm:block hidden" /> Interfaces and 2d & 3d Games
           </p>
           <img
-            src="./img.jpeg"
+            src={profile}
             alt=""
             className="mt-20 rounded-full sm:hidden block shadow-md"
           />

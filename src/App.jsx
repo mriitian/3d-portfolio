@@ -23,10 +23,9 @@ const App = () => {
         <Experience />
         <Tech />
         <Works />
-        <div className="relative z-0 ">
-          <StarsCanvas />
-          <Contact />
-          <StarsCanvas />
+        <div className="relative z-0">
+          <StarsCanvas /> {/* background */}
+          <Contact /> {/* foreground */}
         </div>
       </div>
     </BrowserRouter>

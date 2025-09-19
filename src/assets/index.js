@@ -4,6 +4,7 @@ import creator from "./creator.png";
 import mobile from "./mobile.png";
 import web from "./web.png";
 import github from "./github.png";
+import linkedin from "./linkedin.png";
 import menu from "./menu.svg";
 import close from "./close.svg";
 
@@ -39,6 +40,7 @@ import dashboard from "./dashboard.png";
 import chatapp from "./chatapp.png";
 import snatched from "./snatched.png";
 
+import profile from "./profile.png";
 export {
   logo,
   backend,
@@ -51,6 +53,7 @@ export {
   css,
   docker,
   figma,
+  linkedin,
   racing,
   techfest,
   bizup,
@@ -78,4 +81,5 @@ export {
   chatapp,
   mapit,
   snatched,
+  profile,
 };
