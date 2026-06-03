@@ -42,14 +42,18 @@ const About = () => {
         variants={fadeIn("", "", 0.1, 1)}
         className="mt-4 text-secondary text-[17px] max-w-3xl leading-[30px]"
       >
-        I am a skilled Software Developer possessing a strong foundation in
-        HTML, CSS, Java, and JavaScript, Node.js and React.js, MERN Stack and I
-        have some experience on working with UI on figma for the asia's biggest
-        college fest website making me well-equipped to contribute to your
-        software development projects. My commitment to continuous learning,
-        adaptability, and teamwork aligns perfectly with the expectations of
-        this internship. I am eager to apply my skills, learn from experienced
-        developers, and contribute to the success of your company.
+        I am a passionate Software and Game Developer with hands-on experience
+        in Unity Engine, multiplayer systems, gameplay programming, and
+        interactive UI development. Alongside my strong foundation in C#, C++,
+        JavaScript, React.js, Node.js, and the MERN Stack, I have developed
+        multiple game projects involving networking, gameplay mechanics, and
+        scalable system design. I also possess experience in UI/UX design
+        through my contributions to Asia’s biggest college fest website using
+        Figma, enabling me to combine technical development with creative
+        problem-solving. With a strong commitment to continuous learning,
+        adaptability, and teamwork, I am eager to contribute to innovative game
+        development projects while continuously improving my technical and
+        creative abilities.
       </motion.p>
       <div className="mt-20 flex flex-wrap gap-10">
         {services.map((service, index) => (

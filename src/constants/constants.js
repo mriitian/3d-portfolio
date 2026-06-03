@@ -33,6 +33,14 @@ import {
   dashboard,
   chatapp,
   snatched,
+  unity,
+  blender,
+  iotron,
+  knoxo,
+  socgame,
+  missminutes,
+  creativeportfolio,
+  zombiegame,
 } from "../assets";
 
 export const navLinks = [
@@ -52,12 +60,12 @@ export const navLinks = [
 
 const services = [
   {
-    title: "Web Developer",
-    icon: web,
-  },
-  {
     title: "Game Developer",
     icon: mobile,
+  },
+  {
+    title: "Web Developer",
+    icon: web,
   },
   {
     title: "Backend Developer",
@@ -70,6 +78,14 @@ const services = [
 ];
 
 const technologies = [
+  {
+    name: "Unity",
+    icon: unity,
+  },
+  {
+    name: "Blender",
+    icon: blender,
+  },
   {
     name: "HTML 5",
     icon: html,
@@ -89,10 +105,6 @@ const technologies = [
   {
     name: "React JS",
     icon: reactjs,
-  },
-  {
-    name: "Redux Toolkit",
-    icon: redux,
   },
   {
     name: "Tailwind CSS",
@@ -121,6 +133,34 @@ const technologies = [
 ];
 
 const experiences = [
+  {
+    title: "Unity Game Developer",
+    company_name: "Iotron Technologies",
+    icon: iotron,
+    iconBg: "#1E1E1E",
+    date: "Dec 2024",
+    points: [
+      "Developed a simulation scene for a Rummy game in Unity, handling card interactions, grouping logic, and validation systems.",
+      "Collaborated with a startup team to optimize gameplay mechanics and create a professional card game interface.",
+      "Applied Object-Oriented Programming (OOP) and SOLID principles to improve code reusability, scalability, and maintainability.",
+      "Strengthened game development workflows by building modular and extensible systems in Unity using C#.",
+    ],
+  },
+  {
+    title: "Frontend Developer Intern",
+    company_name: "Knoxo",
+    icon: knoxo,
+    iconBg: "#DDE6ED",
+    date: "Apr 2024 - Jun 2024",
+    points: [
+      "Collaborated in a team of 4 as a Frontend Developer, using React.js to build modern and responsive UI components.",
+      "Managed Django database integration and implemented APIs for user authentication and appointment booking systems.",
+      "Used Postman for API testing, debugging, and validating backend endpoints during development.",
+      "Worked on project structure optimization and loading performance improvements to enhance overall user experience.",
+    ],
+  },
+
+  // Existing Experiences
   {
     title: "Frontend Developer",
     company_name: "MapIT.ai",
@@ -204,6 +244,116 @@ const testimonials = [
 
 const projects = [
   {
+    name: "2D Multiplayer Game",
+    description:
+      "A Unity-based multiplayer game developed during the Season of Code Program under Web and Coding Club. Implemented real-time networking, multiplayer lobbies, and player synchronization using Unity Gaming Services. Designed polished gameplay systems, smooth scene transitions, and an interactive Main Menu UI while gaining hands-on experience in multiplayer architecture and connection management.",
+    tags: [
+      {
+        name: "Unity",
+        color: "blue-text-gradient",
+      },
+      {
+        name: "C#",
+        color: "green-text-gradient",
+      },
+      {
+        name: "Unity Gaming Services",
+        color: "pink-text-gradient",
+      },
+      {
+        name: "Multiplayer",
+        color: "blue-text-gradient",
+      },
+    ],
+    image: socgame,
+    source_code_link: "https://github.com/mriitian/2D-Multiplayer",
+  },
+
+  {
+    name: "Miss Minutes – AI Writing Assistant",
+    description:
+      "A lightweight and responsive AI-powered writing assistant built using React, TypeScript, XState, ProseMirror, and Google Gemini. Features include a rich text editor, AI-assisted ‘Continue Writing’ functionality with character-by-character typing animation, local document storage, TXT export, and a clean modern UI optimized for seamless writing workflows.",
+    tags: [
+      {
+        name: "React",
+        color: "blue-text-gradient",
+      },
+      {
+        name: "TypeScript",
+        color: "green-text-gradient",
+      },
+      {
+        name: "Google Gemini",
+        color: "pink-text-gradient",
+      },
+      {
+        name: "ProseMirror",
+        color: "blue-text-gradient",
+      },
+      {
+        name: "XState",
+        color: "green-text-gradient",
+      },
+    ],
+    image: missminutes,
+    source_code_link: "https://github.com/mriitian/Miss-Minutes",
+  },
+
+  {
+    name: "Zombie Survival Game",
+    description:
+      "A 2D action-survival game inspired by Plants vs Zombies, developed in Unity with multiple gameplay modes, enemy waves, weapon systems, and survival mechanics. Implemented various player weapons, enemy AI behaviors, health systems, and dynamic combat interactions while focusing on engaging gameplay loops, responsive controls, and optimized game architecture.",
+    tags: [
+      {
+        name: "Unity",
+        color: "blue-text-gradient",
+      },
+      {
+        name: "C#",
+        color: "green-text-gradient",
+      },
+      {
+        name: "Game Development",
+        color: "pink-text-gradient",
+      },
+      {
+        name: "2D Game",
+        color: "blue-text-gradient",
+      },
+    ],
+    image: zombiegame,
+    source_code_link: "https://github.com/mriitian/zombie-survival",
+  },
+
+  {
+    name: "3D Creative Portfolio",
+    description:
+      "A creative 3D portfolio hosted on ArtStation showcasing multiple original 3D models, environments, and terrain-based scenes created using Blender and Unity. Explored terrain generation, environmental storytelling, animations, lighting, and AI-assisted workflows to produce visually immersive scenes and stylized renders for creative experimentation and digital world-building.",
+    tags: [
+      {
+        name: "Blender",
+        color: "blue-text-gradient",
+      },
+      {
+        name: "Unity",
+        color: "green-text-gradient",
+      },
+      {
+        name: "3D Modeling",
+        color: "pink-text-gradient",
+      },
+      {
+        name: "Environment Design",
+        color: "blue-text-gradient",
+      },
+    ],
+    image: creativeportfolio,
+    source_code_link: "https://www.artstation.com/vedantparkhe24",
+  },
+
+  // Existing Projects
+
+  {
     name: "CA Firm",
     description:
       "A professional website for a Chartered Accounting (CA) firm, designed with a modern, responsive layout that enhances user experience and engagement.",
@@ -224,6 +374,7 @@ const projects = [
     image: cafirm,
     source_code_link: "https://github.com/mriitian/ca-firm",
   },
+
   {
     name: "AI Prompt Library",
     description:
@@ -245,10 +396,11 @@ const projects = [
     image: promptlib,
     source_code_link: "https://github.com/mriitian/next-app",
   },
+
   {
     name: "Admin Dashboard",
     description:
-      "An intuitive admin dashboard displaying key metrics such as emails sent, sales obtained, new clients, and recent transactions with visually engaging charts and user-friendly navigation",
+      "An intuitive admin dashboard displaying key metrics such as emails sent, sales obtained, new clients, and recent transactions with visually engaging charts and user-friendly navigation.",
     tags: [
       {
         name: "ReactJs",
@@ -266,6 +418,7 @@ const projects = [
     image: dashboard,
     source_code_link: "https://dashboard-react-1.vercel.app/",
   },
+
   {
     name: "A Hospital Website",
     description:
@@ -287,10 +440,11 @@ const projects = [
     image: hospi,
     source_code_link: "https://github.com/mriitian/Hospital-Website",
   },
+
   {
     name: "A Dynamic Chatting App",
     description:
-      "A Dynamic Chatting application built using ReactJS, NodeJS, Express Server and used Socket.io for the chat sockets, MongoDB for Database Management",
+      "A Dynamic Chatting application built using ReactJS, NodeJS, Express Server and Socket.io for real-time communication, along with MongoDB for efficient database management.",
     tags: [
       {
         name: "ReactJs",
@@ -308,6 +462,7 @@ const projects = [
     image: chatapp,
     source_code_link: "https://github.com/mriitian/X-Chatt",
   },
+
   {
     name: "Snatched E-commerce Platform",
     description:
@@ -346,8 +501,8 @@ const projects = [
         color: "green-text-gradient",
       },
     ],
-    image: snatched, // replace with your imported image asset
-    source_code_link: "https://github.com/mriitian/snatched", // adjust as needed
+    image: snatched,
+    source_code_link: "https://github.com/mriitian/snatched",
   },
 ];
 

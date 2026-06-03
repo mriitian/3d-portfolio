@@ -8,6 +8,8 @@ import linkedin from "./linkedin.png";
 import menu from "./menu.svg";
 import close from "./close.svg";
 
+import unity from "./unity.png";
+import blender from "./tech/blender.png";
 import css from "./tech/css.png";
 import docker from "./tech/docker.png";
 import figma from "./tech/figma.png";
@@ -29,6 +31,8 @@ import meta from "./company/meta.png";
 import shopify from "./company/shopify.png";
 import starbucks from "./company/starbucks.png";
 import tesla from "./company/tesla.png";
+import knoxo from "./company/knoxo.jpg";
+import iotron from "./company/iotron.jpg";
 
 import carrent from "./carrent.png";
 import jobit from "./jobit.png";
@@ -39,8 +43,13 @@ import hospi from "./hospi.png";
 import dashboard from "./dashboard.png";
 import chatapp from "./chatapp.png";
 import snatched from "./snatched.png";
+import zombiegame from "./zombiegame.png";
+import socgame from "./multiplayer.png";
+import creativeportfolio from "./creativeportfolio.png";
+import missminutes from "./missminutes.png";
 
 import profile from "./profile.png";
+
 export {
   logo,
   backend,
@@ -82,4 +91,12 @@ export {
   mapit,
   snatched,
   profile,
+  unity,
+  blender,
+  knoxo,
+  iotron,
+  missminutes,
+  socgame,
+  creativeportfolio,
+  zombiegame,
 };
