@@ -114,6 +114,13 @@
   -webkit-text-fill-color: transparent;
 }
 
+/* experience timeline - tighter cards on phones */
+@media (max-width: 639px) {
+  .vertical-timeline-element-content {
+    padding: 20px !important;
+  }
+}
+
 /* canvas- styles */
 .canvas-loader {
   font-size: 10px;
