@@ -2,6 +2,7 @@ import { useState, useRef, Suspense } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { Points, PointMaterial, Preload } from "@react-three/drei";
 import * as random from "maath/random/dist/maath-random.esm";
+import useMediaQuery from "../../hooks/useMediaQuery";
 
 const Stars = (props) => {
   const ref = useRef();
@@ -30,8 +31,11 @@ const Stars = (props) => {
 };
 
 const StarsCanvas = () => {
+  const showCanvas = useMediaQuery("(min-width: 640px)");
+  if (!showCanvas) return null;
+
   return (
-    <div className="w-full h-auto absolute inset-0 z-[-1] hidden sm:block">
+    <div className="w-full h-auto absolute inset-0 z-[-1]">
       <Canvas camera={{ position: [0, 0, 1] }}>
         <Suspense fallback={null}>
           <Stars />
