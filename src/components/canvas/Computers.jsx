@@ -3,9 +3,17 @@ import { Canvas } from "@react-three/fiber";
 import { useGLTF } from "@react-three/drei";
 import React, { Suspense, useEffect, useState } from "react";
 import CanvasLoader from "../Loader";
+import useMediaQuery from "../../hooks/useMediaQuery";
+
+const MODEL_URL = "./pc3/pc.glb";
+
+// start fetching the model right away, but only where the canvas is shown
+if (window.matchMedia("(min-width: 640px)").matches) {
+  useGLTF.preload(MODEL_URL);
+}
 
 const Computers = ({ isMobile }) => {
-  const computer = useGLTF("./pc3/pc.gltf");
+  const computer = useGLTF(MODEL_URL);
 
   return (
     <mesh>
@@ -46,13 +54,15 @@ const ComputerCanvas = () => {
     };
   }, []);
 
+  const showCanvas = useMediaQuery("(min-width: 640px)");
+  if (!showCanvas) return null;
+
   return (
     <Canvas
       frameloop="demand"
       shadows
       camera={{ position: [20, 3, 5], fov: 25 }}
       gl={{ preserveDrawingBuffer: true }}
-      className="sm:block hidden"
     >
       <Suspense fallback={<CanvasLoader />}>
         <OrbitControls

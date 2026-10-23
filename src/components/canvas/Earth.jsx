@@ -2,6 +2,7 @@ import React, { Suspense } from "react";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls, Preload, useGLTF } from "@react-three/drei";
 import CanvasLoader from "../Loader";
+import useMediaQuery from "../../hooks/useMediaQuery";
 
 const Earth = () => {
   const earth = useGLTF("./planet/scene.gltf");
@@ -12,9 +13,11 @@ const Earth = () => {
 };
 
 const EarthCanvas = () => {
+  const showCanvas = useMediaQuery("(min-width: 640px)");
+  if (!showCanvas) return null; // don't load the planet model on phones
+
   return (
     <Canvas
-      className="sm:block hidden" // 👈 hides on <640px screens
       shadows
       frameloop="demand"
       gl={{ preserveDrawingBuffer: true }}
