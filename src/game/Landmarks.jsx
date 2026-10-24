@@ -2,32 +2,36 @@ import React, { useMemo, useRef } from "react";
 import { Html, useGLTF } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { Quaternion, Vector3 } from "three";
-import { R, SHARDS, ZONES, ZONE_RADIUS } from "./zones";
+import { R, SHARDS, ZONES } from "./zones";
 import { game } from "./state";
 import { WORLD_URL } from "./Planet";
+import { prepare } from "./materials";
+
+// how high above each landmark its name tag floats
+const LABEL_HEIGHT = { about: 15.5, projects: 12.5, skills: 11.5, experience: 10, contact: 11.5 };
 
 // Each landmark is a node in the Blender export, modelled around the origin with +Y up.
 const Zone = ({ zone, planetRef }) => {
   const { nodes } = useGLTF(WORLD_URL);
-  const model = useMemo(() => nodes[`Zone_${zone.id}`].clone(true), [nodes, zone.id]);
+  const model = useMemo(
+    () => prepare(nodes[`Zone_${zone.id}`].clone(true)),
+    [nodes, zone.id]
+  );
   const rotation = useMemo(
     () => new Quaternion().setFromUnitVectors(new Vector3(0, 1, 0), zone.dir),
     [zone]
   );
-  const inner = (ZONE_RADIUS - 0.7) / R;
-  const outer = ZONE_RADIUS / R;
 
   return (
     <group quaternion={rotation}>
-      {/* glowing ground ring that follows the planet's curvature */}
-      <mesh>
-        <sphereGeometry args={[R + 0.08, 48, 1, 0, Math.PI * 2, inner, outer - inner]} />
-        <meshBasicMaterial color={zone.color} transparent opacity={0.55} />
-      </mesh>
-
       <group position={[0, R, 0]}>
         <primitive object={model} />
-        <Html position={[0, 11.5, 0]} center occlude={[planetRef]} zIndexRange={[10, 0]}>
+        <Html
+          position={[0, LABEL_HEIGHT[zone.id], 0]}
+          center
+          occlude={[planetRef]}
+          zIndexRange={[10, 0]}
+        >
           <div
             className="pointer-events-none select-none whitespace-nowrap rounded-xl border bg-black/65 px-3 py-1.5 text-white backdrop-blur-sm"
             style={{ borderColor: zone.color }}
@@ -59,7 +63,7 @@ export const Shards = () => {
       if (!mesh) return;
       mesh.visible = !game.collected.has(i);
       mesh.rotation.y = t * 1.5 + i;
-      mesh.position.y = (R + 1.6) + Math.sin(t * 2 + i) * 0.12;
+      mesh.position.y = R + 1.7 + Math.sin(t * 2 + i) * 0.14;
     });
   });
 
@@ -70,13 +74,14 @@ export const Shards = () => {
         const quaternion = new Quaternion().setFromUnitVectors(new Vector3(0, 1, 0), dir);
         return (
           <group key={i} quaternion={quaternion}>
-            <mesh ref={(el) => (refs.current[i] = el)} position={[0, R + 1.6, 0]}>
-              <octahedronGeometry args={[0.55, 0]} />
+            <mesh ref={(el) => (refs.current[i] = el)} position={[0, R + 1.7, 0]}>
+              <octahedronGeometry args={[0.6, 1]} />
               <meshStandardMaterial
                 color="#ffd166"
                 emissive="#ffb703"
-                emissiveIntensity={1.2}
-                flatShading
+                emissiveIntensity={2.4}
+                toneMapped={false}
+                roughness={0.3}
               />
             </mesh>
           </group>
