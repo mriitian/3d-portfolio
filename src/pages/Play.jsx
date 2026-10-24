@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { Canvas } from "@react-three/fiber";
 import { AnimatePresence } from "framer-motion";
 import { game, resetGame, teleportTo } from "../game/state";
@@ -7,6 +7,7 @@ import Rover from "../game/Rover";
 import { Shards, Zones } from "../game/Landmarks";
 import Hud from "../game/Hud";
 import ZoneCard from "../game/ZoneCard";
+import CanvasLoader from "../components/Loader";
 
 const PlayGame = () => {
   const planetRef = useRef();
@@ -64,10 +65,12 @@ const PlayGame = () => {
         <hemisphereLight args={["#9ab0ff", "#3a2250", 0.9]} />
         <directionalLight position={[80, 90, 50]} intensity={2.2} />
 
-        <Planet ref={planetRef} />
-        <Zones planetRef={planetRef} />
-        <Shards />
-        <Rover onNear={handleNear} onShard={setShards} />
+        <Suspense fallback={<CanvasLoader radius={6} />}>
+          <Planet ref={planetRef} />
+          <Zones planetRef={planetRef} />
+          <Shards />
+          <Rover onNear={handleNear} onShard={setShards} />
+        </Suspense>
       </Canvas>
 
       <Hud
