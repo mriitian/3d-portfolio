@@ -1,4 +1,5 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useMemo, useRef } from "react";
+import { useGLTF } from "@react-three/drei";
 import { useFrame, useThree } from "@react-three/fiber";
 import { Matrix4, Vector3 } from "three";
 import { game } from "./state";
@@ -7,7 +8,11 @@ import { R, SHARDS, ZONES, ZONE_RADIUS } from "./zones";
 const MAX_SPEED = 14;
 const BOOST_SPEED = 26;
 const REVERSE_SPEED = 6;
-const GROUND_OFFSET = 0.75;
+const GROUND_OFFSET = 0.03; // the model's wheels already touch y = 0
+const WHEEL_RADIUS = 0.5;
+const ROVER_URL = "/game/rover.glb";
+
+useGLTF.preload(ROVER_URL);
 
 const up = new Vector3();
 const axis = new Vector3();
@@ -19,20 +24,21 @@ const lookTarget = new Vector3();
 const camUp = new Vector3(0, 1, 0);
 const basis = new Matrix4();
 
-const WHEEL_POSITIONS = [
-  [-0.95, 0.4, -0.9],
-  [0.95, 0.4, -0.9],
-  [-0.95, 0.4, 0.9],
-  [0.95, 0.4, 0.9],
-];
 
 const isDown = (...codes) => codes.some((code) => game.keys.has(code));
 
 const Rover = ({ onNear, onShard }) => {
   const camera = useThree((state) => state.camera);
   const rover = useRef();
-  const wheels = useRef([]);
   const lastNear = useRef(null);
+  const { scene } = useGLTF(ROVER_URL);
+  const model = useMemo(() => scene.clone(true), [scene]);
+  const wheels = useMemo(
+    () => ["wheel_FL", "wheel_FR", "wheel_RL", "wheel_RR"]
+      .map((name) => model.getObjectByName(name))
+      .filter(Boolean),
+    [model]
+  );
 
   useEffect(() => {
     const prevent = ["Space", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"];
@@ -98,8 +104,8 @@ const Rover = ({ onNear, onShard }) => {
     basis.makeBasis(right, up, back);
     rover.current.position.copy(roverWorld);
     rover.current.quaternion.setFromRotationMatrix(basis);
-    wheels.current.forEach((wheel) => {
-      if (wheel) wheel.rotation.x -= (game.speed * dt) / 0.45;
+    wheels.forEach((wheel) => {
+      wheel.rotation.x -= (game.speed * dt) / WHEEL_RADIUS;
     });
 
     // chase camera
@@ -141,31 +147,7 @@ const Rover = ({ onNear, onShard }) => {
 
   return (
     <group ref={rover}>
-      {/* forward is -z */}
-      <mesh position={[0, 0.7, 0]}>
-        <boxGeometry args={[1.6, 0.5, 2.8]} />
-        <meshStandardMaterial color="#d3d6e2" flatShading />
-      </mesh>
-      <mesh position={[0, 1.15, 0.2]}>
-        <boxGeometry args={[1.2, 0.5, 1.3]} />
-        <meshStandardMaterial color="#8f98b5" flatShading />
-      </mesh>
-      <mesh position={[0, 0.78, -1.42]}>
-        <boxGeometry args={[1.1, 0.14, 0.08]} />
-        <meshStandardMaterial color="#ff8a3d" emissive="#ff8a3d" emissiveIntensity={1.2} />
-      </mesh>
-      <mesh position={[0, 1.6, 0.5]}>
-        <boxGeometry args={[0.1, 0.5, 0.1]} />
-        <meshStandardMaterial color="#3ddcff" emissive="#3ddcff" emissiveIntensity={1} />
-      </mesh>
-      {WHEEL_POSITIONS.map((position, i) => (
-        <group key={i} position={position} ref={(el) => (wheels.current[i] = el)}>
-          <mesh rotation={[0, 0, Math.PI / 2]}>
-            <cylinderGeometry args={[0.45, 0.45, 0.35, 10]} />
-            <meshStandardMaterial color="#2b2f3d" flatShading />
-          </mesh>
-        </group>
-      ))}
+      <primitive object={model} />
     </group>
   );
 };

@@ -1,42 +1,28 @@
-import React, { forwardRef, useMemo, useRef } from "react";
+import React, { forwardRef, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
-import { Stars } from "@react-three/drei";
-import { BufferAttribute, Color, IcosahedronGeometry } from "three";
-import { R } from "./zones";
+import { Stars, useGLTF } from "@react-three/drei";
 
-// slightly different shade per face, so movement over the ground is readable
-const createPlanetGeometry = () => {
-  const geometry = new IcosahedronGeometry(R, 4);
-  const count = geometry.attributes.position.count;
-  const colors = new Float32Array(count * 3);
-  const color = new Color();
+export const WORLD_URL = "/game/world.glb";
 
-  for (let face = 0; face < count; face += 3) {
-    const noise = Math.abs(Math.sin(face * 12.9898) * 43758.5453) % 1;
-    color.setHSL(0.68, 0.14, 0.4 + noise * 0.14);
-    for (let corner = 0; corner < 3; corner++) {
-      color.toArray(colors, (face + corner) * 3);
-    }
-  }
+// start downloading as soon as this chunk loads
+useGLTF.preload(WORLD_URL);
 
-  geometry.setAttribute("color", new BufferAttribute(colors, 3));
-  return geometry;
-};
-
-// a handful of floating rocks and a moon so the sky is not empty
+// where the floating rocks hang, and which of the three modelled variants each uses
 const ROCKS = [
-  [-58, 30, 20, 2.2],
-  [50, 42, -30, 1.6],
-  [-30, -55, 40, 2.6],
-  [62, -20, 38, 1.4],
-  [10, 66, 36, 2],
-  [-66, -8, -30, 1.8],
+  [-58, 30, 20, 0, 1],
+  [50, 42, -30, 1, 0.8],
+  [-30, -55, 40, 2, 1.1],
+  [62, -20, 38, 0, 0.7],
+  [10, 66, 36, 1, 1],
+  [-66, -8, -30, 2, 0.9],
 ];
 
+// Planet, props, moon and floating rocks all come from the Blender export
+// (art/build_world.py). Nodes are wrapped in groups so their own transforms stay intact.
 const Planet = forwardRef(function Planet(_, ref) {
+  const { nodes } = useGLTF(WORLD_URL);
   const moon = useRef();
   const rocks = useRef();
-  const geometry = useMemo(createPlanetGeometry, []);
 
   useFrame((_, delta) => {
     moon.current.rotation.y += delta * 0.05;
@@ -45,23 +31,20 @@ const Planet = forwardRef(function Planet(_, ref) {
 
   return (
     <>
-      <mesh ref={ref} geometry={geometry}>
-        <meshStandardMaterial vertexColors flatShading />
-      </mesh>
+      <primitive ref={ref} object={nodes.Planet} />
+      <primitive object={nodes.Scatter} />
 
       <group ref={moon}>
-        <mesh position={[110, 20, 0]}>
-          <icosahedronGeometry args={[6, 1]} />
-          <meshStandardMaterial color="#b9bccb" flatShading />
-        </mesh>
+        <group position={[110, 20, 0]}>
+          <primitive object={nodes.Moon} />
+        </group>
       </group>
 
       <group ref={rocks}>
-        {ROCKS.map(([x, y, z, size]) => (
-          <mesh key={`${x}-${y}-${z}`} position={[x, y, z]}>
-            <dodecahedronGeometry args={[size, 0]} />
-            <meshStandardMaterial color="#5f6378" flatShading />
-          </mesh>
+        {ROCKS.map(([x, y, z, variant, size]) => (
+          <group key={`${x}-${y}-${z}`} position={[x, y, z]} scale={size}>
+            <primitive object={nodes[`FloatRock_${variant}`].clone(true)} />
+          </group>
         ))}
       </group>
 
