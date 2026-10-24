@@ -6,15 +6,16 @@ from mathutils import Vector
 from blender_lib import P, ring_points, rot, tr
 
 
-def lamp_post(g, x, y, key="amber", h=2.8, base=None):
-    """Street lamp: tapered pole, curved arm, hooded head, glowing bulb."""
+def lamp_post(g, x, y, key="radium", h=2.6, base=None):
+    """A radium lamp: slim metal post topped by a glowing orb, a halo ring and a light pool."""
     b = tr(x, y, 0) if base is None else base @ tr(x, y, 0)
-    g.metal.cyl(0.13, 0.13, 0.25, segs=14, color=P["gunmetal"], base=b)
-    g.metal.cyl(0.09, 0.06, h, (0, 0, 0.2), segs=12, color=P["gunmetal"], base=b)
-    g.metal.tube((0, 0, h + 0.1), (0.35, 0, h + 0.28), 0.045, segs=8, color=P["gunmetal"],
-                 base=b)
-    g.metal.cyl(0.24, 0.14, 0.16, (0.38, 0, h + 0.16), segs=14, color=P["iron"], base=b)
-    g.g(key).ball(0.14, (0.38, 0, h + 0.1), 2, base=b)
+    g.metal.cyl(0.2, 0.26, 0.2, segs=16, color=P["gunmetal"], base=b)
+    g.metal.cyl(0.075, 0.055, h, (0, 0, 0.15), segs=12, color=P["gunmetal"], base=b)
+    g.metal.cyl(0.2, 0.12, 0.16, (0, 0, h), segs=16, color=P["iron"], base=b)
+    g.g(key).ball(0.3, (0, 0, h + 0.4), 3, base=b)
+    g.g(key).torus(0.46, 0.028, (0, 0, h + 0.4), (72, 0, 0), major=40, minor=6, base=b)
+    g.g(key).torus(0.46, 0.028, (0, 0, h + 0.4), (72, 0, 90), major=40, minor=6, base=b)
+    g.g("halo").cyl(1.5, 1.5, 0.02, (0, 0, 0.02), segs=28, base=b)
 
 
 def crate(g, x, y, yaw=0.0, size=(0.9, 0.9, 0.9), color=None, band=None):

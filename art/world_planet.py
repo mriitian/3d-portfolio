@@ -12,6 +12,7 @@ from blender_lib import (Group, Mesh, P, bake_ao, mix, rot, tr)
 from zone_common import lamp_post
 
 R = 40.0
+SOLIDS = []  # (direction in Blender space, radius) of props the rover must not drive through
 
 # Must match src/game/zones.js (id, latitude, longitude in degrees).
 ZONE_DEFS = [
@@ -120,13 +121,9 @@ def build_planet(dirs, path_pts):
             col = mix(col, mix(P["plaza_dark"], P["plaza"], 0.5 + 0.5 * math.sin(d_spawn * 2.6)),
                       1.0 - smooth(5.2, 6.5, d_spawn))
 
-        # the sand road
+        # the road bed (the raised pavements and curbs are modelled separately)
         d_path = tree.find(co.normalized() * R)[2]
-        road = 1.0 - smooth(1.7, 2.4, d_path)
-        edge = (1.0 - smooth(2.4, 3.6, d_path)) * 0.55
-        sand = mix(P["sand"], P["sand_dark"], noise.noise(c * 30.0) * 0.5 + 0.35)
-        col = mix(col, P["sand_dark"], edge)
-        col = mix(col, sand, road)
+        col = mix(col, P["asphalt"], 1.0 - smooth(2.8, 3.4, d_path))
         return col
 
     cache = {}
@@ -173,42 +170,78 @@ def place(direction, yaw=0.0, scale=1.0, lift=0.0):
     return tr(*(direction.normalized() * (R + lift))) @ q @ rot(0, 0, yaw) @ Matrix.Scale(scale, 4)
 
 
-def round_tree(g, base, leaf):
-    g.lit.lathe([(0.42, 0.0), (0.3, 0.5), (0.22, 1.4), (0.2, 2.2)], segs=12, color=P["trunk"],
-                base=base, caps=False)
-    for x, y, z, r in ((0, 0, 3.0, 1.35), (0.85, 0.3, 3.6, 0.9), (-0.75, -0.4, 3.5, 0.95),
-                       (0.1, -0.9, 3.2, 0.8)):
-        g.lit.ball(r, (x, y, z), 3, color=leaf, lump=0.2, grad=(2.0, 4.8, 0.78, 1.18), base=base)
+def broadleaf(g, base, leaf):
+    """A broadleaf tree: flared trunk, two limbs, layered lumpy canopy and glowing fruit."""
+    g.lit.lathe([(0.6, 0.0), (0.4, 0.35), (0.27, 1.1), (0.23, 2.1), (0.2, 2.7)], segs=14,
+                color=P["trunk"], base=base, caps=False)
+    for sx in (-1, 1):
+        g.lit.tube((0, 0, 1.9), (sx * 0.95, sx * 0.15, 3.0), 0.1, segs=8, color=P["trunk"],
+                   base=base)
+    for x, y, z, r in ((0, 0, 3.5, 1.35), (1.0, 0.3, 3.1, 0.95), (-0.95, -0.25, 3.15, 1.0),
+                       (0.15, -1.0, 3.6, 0.9), (0.25, 1.0, 3.8, 0.85), (0, 0, 4.5, 0.85)):
+        g.lit.ball(r, (x, y, z), 3, color=leaf, lump=0.22, grad=(2.2, 5.4, 0.62, 1.3), base=base)
+    for x, y, z in ((1.0, -0.9, 3.2), (-1.1, 0.5, 3.6), (0.3, 1.4, 3.7), (-0.2, -1.4, 3.0)):
+        g.g("cyan").ball(0.09, (x, y, z), 2, base=base)
 
 
-def pine_tree(g, base, leaf):
-    g.lit.lathe([(0.3, 0.0), (0.2, 1.2)], segs=10, color=P["trunk"], base=base, caps=False)
-    for r, z, h in ((1.5, 0.9, 1.9), (1.15, 2.1, 1.8), (0.8, 3.2, 1.7), (0.45, 4.2, 1.5)):
-        g.lit.lathe([(r, z), (r * 0.78, z + h * 0.35), (r * 0.42, z + h * 0.72),
-                     (0.0, z + h)], segs=18, color=leaf, grad=(0.9, 5.7, 0.8, 1.15), base=base,
-                    caps=True)
+def glow_tree(g, base):
+    """A rarer twisted tree with a violet crown hung with glowing orbs."""
+    pts = [(0, 0, 0), (0.3, 0.1, 1.2), (-0.2, 0.3, 2.3), (0.2, -0.1, 3.3), (0, 0, 4.2)]
+    for a, b in zip(pts, pts[1:]):
+        g.lit.tube(a, b, 0.2, segs=10, color=P["trunk"], base=base)
+    for x, y, z, r in ((0, 0, 4.6, 1.2), (1.0, 0.4, 4.2, 0.8), (-0.9, -0.3, 4.3, 0.85),
+                       (0.1, -0.9, 4.0, 0.7)):
+        g.lit.ball(r, (x, y, z), 3, color=P["leaf_amber"], lump=0.25,
+                   grad=(3.2, 5.8, 0.7, 1.25), base=base)
+    for i in range(7):
+        a = i * 0.9
+        g.g("violet").ball(0.1, (math.cos(a) * 1.4, math.sin(a) * 1.4, 3.6 + (i % 3) * 0.5), 2,
+                           base=base)
+
+
+def conifer(g, base, leaf):
+    """A tall tiered conifer, frosted toward the tip."""
+    g.lit.lathe([(0.34, 0.0), (0.24, 0.5), (0.2, 1.4)], segs=10, color=P["trunk"], base=base,
+                caps=False)
+    tiers = [(1.65, 0.9, 1.5), (1.4, 1.9, 1.45), (1.15, 2.9, 1.4), (0.9, 3.8, 1.3),
+             (0.65, 4.65, 1.2), (0.4, 5.4, 1.1)]
+    for i, (r, z, h) in enumerate(tiers):
+        col = mix(leaf, P["leaf_teal"], i / len(tiers) * 0.7)
+        g.lit.lathe([(r, z), (r * 0.9, z + h * 0.18), (r * 0.62, z + h * 0.5),
+                     (r * 0.28, z + h * 0.8), (0.0, z + h)], segs=22, color=col,
+                    grad=(0.9, 6.5, 0.6, 1.3), base=base, caps=True)
+    g.g("ice").ball(0.1, (0, 0, 6.55), 2, base=base)
 
 
 def bush(g, base, leaf):
-    g.lit.ball(0.75, (0, 0, 0.45), 3, scale=(1.2, 1.0, 0.75), color=leaf, lump=0.25, base=base)
-    g.lit.ball(0.5, (0.65, 0.2, 0.35), 3, scale=(1, 1, 0.8), color=leaf, lump=0.25, base=base)
+    for x, y, z, r in ((0, 0, 0.5, 0.8), (0.7, 0.25, 0.4, 0.55), (-0.6, -0.3, 0.42, 0.6)):
+        g.lit.ball(r, (x, y, z), 3, scale=(1.2, 1, 0.8), color=leaf, lump=0.28,
+                   grad=(0, 1.3, 0.6, 1.25), base=base)
+    for x, y, z in ((0.5, -0.6, 0.7), (-0.4, 0.6, 0.8), (0.1, 0.1, 1.05)):
+        g.g("magenta").ball(0.07, (x, y, z), 2, base=base)
 
 
 def rock(g, base, size, shade):
-    g.lit.ball(size, (0, 0, size * 0.32), 3, scale=(1.15, 0.95, 0.7), color=shade, lump=0.34,
-               lump_freq=1.7, base=base)
+    g.lit.ball(size, (0, 0, size * 0.3), 3, scale=(1.2, 1.0, 0.72), color=shade, lump=0.42,
+               lump_freq=1.9, grad=(0, size * 1.2, 0.7, 1.15), base=base)
+    if size > 0.9:  # a mossy cap on the bigger ones
+        g.lit.ball(size * 0.75, (0, 0, size * 0.5), 3, scale=(1.0, 0.85, 0.4),
+                   color=P["grass_dark"], lump=0.3, base=base)
 
 
-def tuft(g, base):
+def tuft(g, base, glow=False):
     for dx, dy, tilt, h in ((0, 0, 0, 0.75), (0.16, 0.05, 14, 0.55), (-0.13, 0.09, -13, 0.6)):
-        g.lit.cyl(0.08, 0.0, h, (dx, dy, 0), (tilt, tilt * 0.5, 0), segs=5, color=P["grass_light"],
-                  grad=(0, 0.7, 0.7, 1.2), base=base, caps=False)
+        g.lit.cyl(0.08, 0.0, h, (dx, dy, 0), (tilt, tilt * 0.5, 0), segs=5,
+                  color=P["grass_light"], grad=(0, 0.7, 0.7, 1.2), base=base, caps=False)
+    if glow:
+        g.g("cyan").ball(0.05, (0, 0, 0.8), 2, base=base)
 
 
-def mushroom(g, base, cap):
-    g.lit.lathe([(0.16, 0.0), (0.11, 0.3), (0.1, 0.6)], segs=10, color=P["cream"], base=base,
-                caps=False)
-    g.lit.ball(0.42, (0, 0, 0.66), 3, scale=(1, 1, 0.55), color=cap, base=base)
+def mushroom(g, base, key):
+    """Bioluminescent mushroom: pale stem, glowing cap."""
+    g.lit.lathe([(0.15, 0.0), (0.1, 0.3), (0.09, 0.6)], segs=10, color=P["pavement"],
+                base=base, caps=False)
+    g.g(key).ball(0.42, (0, 0, 0.66), 3, scale=(1, 1, 0.5), base=base)
 
 
 def crystal_cluster(g, base, key):
@@ -249,7 +282,7 @@ def build_scatter(dirs, path_pts):
     def ok(d, min_zone, min_path, min_gap):
         if any(arc_dist(d, z) < min_zone for z in zone_list):
             return False
-        if arc_dist(d, SPAWN) < 8:
+        if arc_dist(d, SPAWN) < 9.5:
             return False
         if path_tree.find(d * R)[2] < min_path:
             return False
@@ -272,43 +305,73 @@ def build_scatter(dirs, path_pts):
             fn(d, G(d))
             n += 1
 
-    leaves = [P["leaf_green"], P["leaf_lime"], P["leaf_teal"], P["leaf_amber"], P["leaf_green"],
-              P["leaf_pink"]]
-    scatter(38, 11.0, 4.4, 5.5,
-            lambda d, g: round_tree(g, place(d, rng.uniform(0, 360), rng.uniform(0.9, 1.4)),
-                                 rng.choice(leaves)))
-    scatter(34, 11.0, 4.4, 4.6,
-            lambda d, g: pine_tree(g, place(d, rng.uniform(0, 360), rng.uniform(0.85, 1.3)),
-                                rng.choice([P["leaf_green"], P["leaf_teal"], P["grass_dark"]])))
-    scatter(30, 10.0, 3.6, 3.0,
-            lambda d, g: bush(g, place(d, rng.uniform(0, 360), rng.uniform(0.8, 1.3)),
-                           rng.choice([P["leaf_green"], P["leaf_lime"], P["grass"]])))
-    scatter(54, 9.5, 3.4, 3.2,
-            lambda d, g: rock(g, place(d, rng.uniform(0, 360)), rng.uniform(0.55, 1.6),
-                           rng.choice([P["rock"], P["rock_dark"], P["rock_light"]])))
-    scatter(16, 10.0, 4.0, 5.0,
-            lambda d, g: crystal_cluster(g, place(d, rng.uniform(0, 360), rng.uniform(0.9, 1.5)),
-                                      rng.choice(["cyan", "magenta", "amber", "cyan"])))
-    scatter(22, 9.5, 3.6, 2.6,
-            lambda d, g: mushroom(g, place(d, rng.uniform(0, 360), rng.uniform(0.9, 1.7)),
-                               rng.choice([P["mushroom"], P["leaf_amber"], P["leaf_pink"]])))
-    scatter(180, 8.5, 3.0, 1.2,
-            lambda d, g: tuft(g, place(d, rng.uniform(0, 360), rng.uniform(0.8, 1.4))), tries=9000)
+    leaves = [P["leaf_green"], P["leaf_lime"], P["leaf_teal"], P["leaf_green"], P["leaf_pink"]]
+    solids = []
+
+    def tree_fn(d, g):
+        s = rng.uniform(0.9, 1.4)
+        b = place(d, rng.uniform(0, 360), s)
+        if rng.random() < 0.25:
+            glow_tree(g, b)
+        else:
+            broadleaf(g, b, rng.choice(leaves))
+        solids.append((d, 0.6 * s))
+
+    def pine_fn(d, g):
+        s = rng.uniform(0.85, 1.3)
+        conifer(g, place(d, rng.uniform(0, 360), s),
+                rng.choice([P["leaf_green"], P["grass_dark"], P["leaf_teal"]]))
+        solids.append((d, 1.0 * s))
+
+    def bush_fn(d, g):
+        s = rng.uniform(0.8, 1.3)
+        bush(g, place(d, rng.uniform(0, 360), s),
+             rng.choice([P["leaf_green"], P["leaf_lime"], P["grass"]]))
+        solids.append((d, 0.9 * s))
+
+    def rock_fn(d, g):
+        size = rng.uniform(0.55, 1.6)
+        rock(g, place(d, rng.uniform(0, 360)), size,
+             rng.choice([P["rock"], P["rock_dark"], P["rock_light"]]))
+        solids.append((d, size * 1.1))
+
+    def crystal_fn(d, g):
+        s = rng.uniform(0.9, 1.5)
+        crystal_cluster(g, place(d, rng.uniform(0, 360), s),
+                        rng.choice(["cyan", "magenta", "violet", "cyan", "blue"]))
+        solids.append((d, 0.85 * s))
+
+    def mushroom_fn(d, g):
+        mushroom(g, place(d, rng.uniform(0, 360), rng.uniform(0.9, 1.7)),
+                 rng.choice(["magenta", "cyan", "violet"]))
+
+    def tuft_fn(d, g):
+        tuft(g, place(d, rng.uniform(0, 360), rng.uniform(0.8, 1.4)), glow=rng.random() < 0.25)
+
+    scatter(34, 16.0, 4.4, 5.5, tree_fn)
+    scatter(34, 16.0, 4.4, 4.6, pine_fn)
+    scatter(30, 15.0, 3.6, 3.0, bush_fn)
+    scatter(54, 15.0, 3.4, 3.2, rock_fn)
+    scatter(16, 15.0, 4.0, 5.0, crystal_fn)
+    scatter(22, 15.0, 3.6, 2.6, mushroom_fn)
+    scatter(180, 14.5, 3.0, 1.2, tuft_fn, tries=9000)
 
     # street lamps along the road, alternating sides
     side_sign = 1
     last = None
     for p, tangent in path_pts:
         d = p.normalized()
-        if arc_dist(d, SPAWN) < 7 or any(arc_dist(d, z) < 9.0 for z in zone_list):
+        if arc_dist(d, SPAWN) < 9 or any(arc_dist(d, z) < 17.0 for z in zone_list):
             continue
-        if last is not None and arc_dist(d, last) < 9.5:
+        if last is not None and arc_dist(d, last) < 8.5:
             continue
         side = d.cross(tangent).normalized() * side_sign
-        lp = (p + side * 3.1).normalized()
-        lamp_post(G(lp), 0, 0, "amber", 2.6, base=place(lp, rng.uniform(0, 360)))
+        lp = (p + side * 3.6).normalized()
+        lamp_post(G(lp), 0, 0, "radium", 2.4, base=place(lp, rng.uniform(0, 360)))
+        solids.append((lp, 0.3))
         side_sign *= -1
         last = d
+    SOLIDS[:] = solids
     return list(groups.values())
 
 
@@ -346,34 +409,6 @@ def build_moon():
     return obj
 
 
-def build_sky_planet():
-    """A big banded ringed planet for the backdrop."""
-    noise.seed_set(6)
-    g = Group("SkyPlanet", seed=61, bevel=0.0)
-    tilt = tr(0, 0, 0) @ rot(62, 0, 18)
-    m = g.lit
-    bmesh.ops.create_icosphere(m.bm, subdivisions=6, radius=30.0, calc_uvs=False)
-    bands = [P["earth_light"], P["orange"], P["leaf_pink"], P["violet"], P["earth_dark"],
-             P["sand"]]
-    cache = {}
-    for v in m.bm.verts:
-        c = v.co.normalized()
-        t = c.z * 7.0 + noise.noise(c * 2.2) * 1.6
-        i = int(math.floor(t)) % len(bands)
-        j = (i + 1) % len(bands)
-        col = mix(bands[i], bands[j], smooth(0.0, 1.0, t - math.floor(t)))
-        k = 0.85 + 0.15 * noise.noise(c * 8)
-        cache[v] = tuple(x * k for x in col)
-    for f in m.bm.faces:
-        for loop in f.loops:
-            loop[m.col] = (*cache[loop.vert], 1.0)
-    # rings
-    for r0, r1, col in ((38, 42, P["sand"]), (43, 50, P["earth_light"]), (51, 53.5, P["sand_dark"])):
-        g.paint.lathe([(r0, -0.15), (r1, -0.15), (r1, 0.15), (r0, 0.15)], segs=96, color=col,
-                      base=tilt, caps=True, grad=False)
-    return g.build()
-
-
 def build_island(index):
     g = Group(f"FloatRock_{index}", ao=(-4.0, 1.0, 0.7, 1.0), seed=40 + index, bevel=0.0)
     rng = random.Random(40 + index)
@@ -390,9 +425,9 @@ def build_island(index):
     g.lit.ball(r * 0.7, (0, 0, -1.0), 3, scale=(1, 1, 1.1), color=P["rock_dark"], lump=0.25,
                grad=False)
     if index % 3 == 0:
-        round_tree(g, tr(0.6, 0.2, 0.5), P["leaf_pink"])
+        broadleaf(g, tr(0.6, 0.2, 0.5), P["leaf_pink"])
     elif index % 3 == 1:
-        pine_tree(g, tr(-0.4, 0.3, 0.5), P["leaf_teal"])
+        conifer(g, tr(-0.4, 0.3, 0.5), P["leaf_teal"])
     else:
         crystal_cluster(g, tr(0.3, -0.3, 0.5), "magenta")
     rock(g, tr(-r * 0.5, -r * 0.3, 0.4), 0.7, P["rock_light"])
@@ -415,7 +450,9 @@ def build_all(args):
         bake_ao(meshes, [planet], samples=max(8, args.ao // 2), max_dist=2.2, floor=0.5)
     print(f"SCATTER built in {__import__('time').time() - t:.1f}s")
 
-    roots = [planet, *scatter_roots, build_moon(), build_sky_planet()]
+    from world_road import build_road
+
+    roots = [planet, *scatter_roots, build_road(dirs, path_pts), build_moon()]
     for i in range(4):
         isl = build_island(i)
         bake_ao([ob for ob in isl.children_recursive if ob.type == "MESH"], [],
@@ -427,7 +464,7 @@ def build_all(args):
 def render_previews(folder):
     sc = bpy.context.scene
     for ob in bpy.data.objects:
-        ob.hide_render = ob.name.startswith(("FloatRock", "SkyPlanet", "Moon"))
+        ob.hide_render = ob.name.startswith(("FloatRock", "Moon"))
     spawn = SPAWN * R
     up = SPAWN
     cam = spawn + up * 7 + Vector((0, -13, 0))

@@ -5,6 +5,7 @@ import { Matrix4, Vector3 } from "three";
 import { game } from "./state";
 import { prepare } from "./materials";
 import { R, SHARDS, ZONES, ZONE_RADIUS } from "./zones";
+import obstacleData from "./obstacles.json";
 
 const MAX_SPEED = 14;
 const BOOST_SPEED = 26;
@@ -12,10 +13,20 @@ const REVERSE_SPEED = 6;
 const GROUND_OFFSET = 0.04; // the model's wheels already touch y = 0
 const WHEEL_RADIUS = 0.55;
 const ROVER_URL = "/game/rover.glb";
+const ROVER_RADIUS = 1.45; // the rover is treated as a circle for collisions
+
+// Trees, rocks, lamps and the solid parts of each landmark: [x, y, z, radius] on the planet
+// (exported by art/build_world.py). Each is a circle on the surface the rover can't enter.
+const OBSTACLES = obstacleData.map(([x, y, z, r]) => ({
+  dir: new Vector3(x, y, z).normalize(),
+  reach: r + ROVER_RADIUS,
+  cosReach: Math.cos((r + ROVER_RADIUS) / R),
+}));
 
 useGLTF.preload(ROVER_URL);
 
 const up = new Vector3();
+const push = new Vector3();
 const axis = new Vector3();
 const right = new Vector3();
 const back = new Vector3();
@@ -92,6 +103,24 @@ const Rover = ({ onNear, onShard }) => {
     const angle = (game.speed * dt) / R;
     game.pos.applyAxisAngle(axis, angle);
     game.fwd.applyAxisAngle(axis, angle);
+
+    // collisions: slide along anything solid instead of driving through it
+    up.copy(game.pos).normalize();
+    let hit = false;
+    for (const o of OBSTACLES) {
+      const c = up.dot(o.dir);
+      if (c < o.cosReach) continue;
+      push.copy(up).addScaledVector(o.dir, -c); // points away from the obstacle
+      if (push.lengthSq() < 1e-9) continue;
+      push.normalize();
+      const a = o.reach / R;
+      up.copy(o.dir).multiplyScalar(Math.cos(a)).addScaledVector(push, Math.sin(a));
+      // only the part of the motion that heads into the obstacle is lost
+      const into = Math.max(0, -game.fwd.dot(push) * Math.sign(game.speed));
+      game.speed *= 1 - 0.85 * into;
+      hit = true;
+    }
+    if (hit) game.pos.copy(up).multiplyScalar(R);
 
     // keep the heading tangent to the surface and the position on the sphere
     up.copy(game.pos).normalize();

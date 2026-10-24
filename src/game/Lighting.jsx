@@ -8,9 +8,9 @@ import { SkyMaterial } from "./Sky";
 // Where the light comes from, in the rover's frame (right, up, forward). It is deliberately
 // not the sun drawn in the sky: lighting from the side and slightly behind keeps the rover
 // and the landmarks facing the camera readable, while the sunset stays ahead.
-const LIGHT_RIGHT = 0.62;
-const LIGHT_UP = 0.6;
-const LIGHT_FWD = -0.32;
+const LIGHT_RIGHT = 0.55;
+const LIGHT_UP = 0.7;
+const LIGHT_FWD = -0.3;
 
 const dir = new Vector3();
 const back = new Vector3();
@@ -46,7 +46,7 @@ const Lighting = () => {
       <directionalLight
         ref={light}
         castShadow
-        color="#ffb36b"
+        color="#a9c2ff"
         intensity={3.6}
         shadow-mapSize={[2048, 2048]}
         shadow-camera-left={-36}
@@ -58,8 +58,8 @@ const Lighting = () => {
         shadow-bias={-0.0006}
         shadow-normalBias={0.06}
       />
-      <hemisphereLight args={["#a08aff", "#7a4630", 1.15]} />
-      <ambientLight intensity={0.25} color="#ffd9c4" />
+      <hemisphereLight args={["#5a72e0", "#2a2766", 1.7]} />
+      <ambientLight intensity={0.5} color="#7f8ee8" />
       <Environment resolution={128} frames={1}>
         <mesh>
           <sphereGeometry args={[100, 32, 24]} />

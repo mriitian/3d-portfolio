@@ -4,7 +4,8 @@ The 3D world is generated procedurally with Blender's Python API, so every model
 tweaked in code and re-exported. Style: smooth, beveled stylised models painted with
 per-vertex colours (no textures), soft ambient occlusion baked into those colours, and a few
 emissive "glow" materials (the game adds bloom to them). Palette matches the site: warm
-terracotta ground, sandstone buildings, orange/cyan/magenta/violet accents.
+a dark, cool night palette (slate-blue ground, teal moss, dark asphalt) with cyan/magenta/violet
+and amber glows.
 
 | File | What it builds |
 |---|---|
@@ -15,7 +16,8 @@ terracotta ground, sandstone buildings, orange/cyan/magenta/violet accents.
 | `zone_observatory.py` | 03 Skills: domed observatory with a glowing orb, holo panels, constellation |
 | `zone_station.py` | 04 Experience: long glass-tube module on pylons, solar wings |
 | `zone_commhub.py` | 05 Contact: sandstone hall, dish, tower, glowing mail sign |
-| `world_planet.py` | the planet (painted terrain + road), props, moon, sky planet, floating islands |
+| `world_planet.py` | the planet (painted terrain), props, moon, floating islands |
+| `world_road.py` | the roads: a roundabout around each landmark, routes between them, pavements, curbs, glowing edge lines, radium lamps |
 | `world_rover.py` | the rover, its driver and four separate wheel nodes |
 | `build_world.py` | entry point: builds, bakes AO, previews and exports |
 | `preview.py` | headless preview renders |

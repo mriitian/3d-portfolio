@@ -109,3 +109,7 @@ def build():
     for x, y, a in ring_points(4, 5.5, 45):
         lamp_post(g, x, y, "cyan", 2.6)
     return g.build()
+
+
+# solid parts, as (x, y, radius) in this zone's own frame; the game stops the rover at these
+COLLIDERS = [(0, 0, 3.4), (-4.7, 1.8, 1.15), (4.7, 1.8, 1.15), (0, -5.3, 0.8)]

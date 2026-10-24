@@ -1,13 +1,11 @@
 import React, { useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
-import { Stars, useGLTF } from "@react-three/drei";
+import { Stars } from "@react-three/drei";
 import { BackSide, Color, Matrix4, Vector3 } from "three";
 import { game } from "./state";
-import { WORLD_URL } from "./Planet";
-import { prepare } from "./materials";
 
 // The sun's direction in the rover's own frame: x = right, y = up, -z = forward.
-export const SUN_LOCAL = new Vector3(0.62, 0.5, -0.22).normalize();
+export const SUN_LOCAL = new Vector3(0.5, 0.42, -0.6).normalize(); // the moon
 
 const vertexShader = /* glsl */ `
   varying vec3 vDir;
@@ -27,23 +25,23 @@ const fragmentShader = /* glsl */ `
   void main() {
     vec3 n = normalize(vDir);
     float y = n.y;
-    vec3 col = mix(horizon, mid, smoothstep(0.0, 0.3, y));
-    col = mix(col, zenith, smoothstep(0.22, 0.9, y));
+    vec3 col = mix(horizon, mid, smoothstep(0.0, 0.07, y));
+    col = mix(col, zenith, smoothstep(0.08, 0.75, y));
     col = mix(col, below, smoothstep(0.0, -0.3, y));
     float s = max(dot(n, normalize(sunDir)), 0.0);
-    col += vec3(1.0, 0.62, 0.32) * pow(s, 6.0) * 0.45;
-    col += vec3(1.0, 0.75, 0.45) * pow(s, 40.0) * 0.9;
-    col += vec3(1.0, 0.92, 0.75) * smoothstep(0.9993, 0.9998, s) * 4.0;
+    col += vec3(0.45, 0.6, 1.0) * pow(s, 14.0) * 0.16;
+    col += vec3(0.7, 0.85, 1.0) * pow(s, 60.0) * 0.5;
+    col += vec3(0.85, 0.93, 1.0) * smoothstep(0.9993, 0.9998, s) * 3.0;
     gl_FragColor = vec4(col, 1.0);
     #include <colorspace_fragment>
   }
 `;
 
 export const createSkyUniforms = () => ({
-  zenith: { value: new Color("#1d1450") },
-  mid: { value: new Color("#b8447f") },
-  horizon: { value: new Color("#ff9a4d") },
-  below: { value: new Color("#2a1840") },
+  zenith: { value: new Color("#02030c") },
+  mid: { value: new Color("#0a1238") },
+  horizon: { value: new Color("#16376e") },
+  below: { value: new Color("#050818") },
   sunDir: { value: SUN_LOCAL.clone() },
 });
 
@@ -68,11 +66,6 @@ const back = new Vector3();
 // sunset always looks the same however far around the planet you drive.
 const Sky = () => {
   const rig = useRef();
-  const { nodes } = useGLTF(WORLD_URL);
-  const planet = useMemo(
-    () => prepare(nodes.SkyPlanet, { cast: false, receive: false, fog: false }),
-    [nodes]
-  );
 
   useFrame(({ camera }) => {
     back.copy(game.fwd).negate();
@@ -88,9 +81,6 @@ const Sky = () => {
         <SkyMaterial />
       </mesh>
       <Stars radius={800} depth={120} count={3500} factor={7} saturation={0} fade speed={0.3} />
-      <group position={[-190, 120, -420]} scale={1.8}>
-        <primitive object={planet} />
-      </group>
     </group>
   );
 };

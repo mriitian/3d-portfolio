@@ -7,7 +7,7 @@ export const prepare = (root, { cast = true, receive = true, fog = true } = {}) 
 
     if (mat.name && mat.name.startsWith("Glow_")) {
       // emissive parts: bright enough for the bloom pass to pick up
-      mat.emissiveIntensity = 2.6;
+      mat.emissiveIntensity = 3.0;
       mat.toneMapped = false;
       o.castShadow = false;
       o.receiveShadow = false;
