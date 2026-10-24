@@ -6,6 +6,8 @@ import { R, SPAWN_DIR } from "./zones";
 export const game = {
   pos: new Vector3(),
   fwd: new Vector3(),
+  up: new Vector3(0, 1, 0), // rover's local axes, kept current by Rover
+  right: new Vector3(1, 0, 0),
   speed: 0,
   paused: false,
   snapCamera: true,

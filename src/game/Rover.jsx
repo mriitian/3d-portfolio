@@ -3,13 +3,14 @@ import { useGLTF } from "@react-three/drei";
 import { useFrame, useThree } from "@react-three/fiber";
 import { Matrix4, Vector3 } from "three";
 import { game } from "./state";
+import { prepare } from "./materials";
 import { R, SHARDS, ZONES, ZONE_RADIUS } from "./zones";
 
 const MAX_SPEED = 14;
 const BOOST_SPEED = 26;
 const REVERSE_SPEED = 6;
-const GROUND_OFFSET = 0.03; // the model's wheels already touch y = 0
-const WHEEL_RADIUS = 0.5;
+const GROUND_OFFSET = 0.04; // the model's wheels already touch y = 0
+const WHEEL_RADIUS = 0.55;
 const ROVER_URL = "/game/rover.glb";
 
 useGLTF.preload(ROVER_URL);
@@ -24,7 +25,6 @@ const lookTarget = new Vector3();
 const camUp = new Vector3(0, 1, 0);
 const basis = new Matrix4();
 
-
 const isDown = (...codes) => codes.some((code) => game.keys.has(code));
 
 const Rover = ({ onNear, onShard }) => {
@@ -32,11 +32,12 @@ const Rover = ({ onNear, onShard }) => {
   const rover = useRef();
   const lastNear = useRef(null);
   const { scene } = useGLTF(ROVER_URL);
-  const model = useMemo(() => scene.clone(true), [scene]);
+  const model = useMemo(() => prepare(scene.clone(true)), [scene]);
   const wheels = useMemo(
-    () => ["wheel_FL", "wheel_FR", "wheel_RL", "wheel_RR"]
-      .map((name) => model.getObjectByName(name))
-      .filter(Boolean),
+    () =>
+      ["wheel_FL", "wheel_FR", "wheel_RL", "wheel_RR"]
+        .map((name) => model.getObjectByName(name))
+        .filter(Boolean),
     [model]
   );
 
@@ -104,12 +105,14 @@ const Rover = ({ onNear, onShard }) => {
     basis.makeBasis(right, up, back);
     rover.current.position.copy(roverWorld);
     rover.current.quaternion.setFromRotationMatrix(basis);
+    game.up.copy(up);
+    game.right.copy(right);
     wheels.forEach((wheel) => {
       wheel.rotation.x -= (game.speed * dt) / WHEEL_RADIUS;
     });
 
     // chase camera
-    camTarget.copy(roverWorld).addScaledVector(up, 5.5).addScaledVector(game.fwd, -11);
+    camTarget.copy(roverWorld).addScaledVector(up, 6.2).addScaledVector(game.fwd, -12.5);
     if (game.snapCamera) {
       camera.position.copy(camTarget);
       camUp.copy(up);
@@ -120,7 +123,7 @@ const Rover = ({ onNear, onShard }) => {
       camUp.lerp(up, follow).normalize();
     }
     camera.up.copy(camUp);
-    lookTarget.copy(roverWorld).addScaledVector(game.fwd, 3).addScaledVector(up, 1.2);
+    lookTarget.copy(roverWorld).addScaledVector(game.fwd, 3.5).addScaledVector(up, 1.6);
     camera.lookAt(lookTarget);
 
     // zone proximity
@@ -138,7 +141,7 @@ const Rover = ({ onNear, onShard }) => {
     for (let i = 0; i < SHARDS.length; i++) {
       if (game.collected.has(i)) continue;
       const arc = R * Math.acos(Math.min(1, up.dot(SHARDS[i])));
-      if (arc < 2.6) {
+      if (arc < 2.8) {
         game.collected.add(i);
         onShard(game.collected.size);
       }

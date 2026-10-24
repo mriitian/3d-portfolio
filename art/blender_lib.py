@@ -1,15 +1,17 @@
-"""Shared helpers for building the low-poly world in Blender (run with `blender -b -P`).
+"""Shared helpers for building the world in Blender (run with `blender -b -P`).
 
-Everything is flat-shaded geometry painted with per-face vertex colors, which keeps
-the exported files tiny and gives the stylised "game art" look. Glowing parts use a
-handful of emissive materials. Modelling space is Blender's: +Z up, +Y forward.
+Models are smooth-shaded, beveled hard-surface and organic shapes painted with per-vertex
+colors, with ambient occlusion baked into those colors (see `bake_ao`). Lights and windows
+use a few emissive materials. Modelling space is Blender's: +Z up, +Y forward.
 """
 import math
 import random
 
 import bmesh
 import bpy
-from mathutils import Euler, Matrix, Vector
+import numpy as np
+from mathutils import Euler, Matrix, Quaternion, Vector, noise
+from mathutils.bvhtree import BVHTree
 
 # ---------------------------------------------------------------- palette ---
 
@@ -26,66 +28,87 @@ def C(hex_color):
 
 
 P = {
-    # world
-    "ground_a": C("#454aa6"),
-    "ground_b": C("#5556c2"),
-    "ground_c": C("#337aab"),
-    "ground_d": C("#6a5fd8"),
-    "plaza": C("#26264f"),
-    "path": C("#f6b06a"),
-    "path_edge": C("#cf8449"),
-    "crater": C("#2b2d6c"),
-    "crater_rim": C("#6a67c9"),
+    # terrain: warm terracotta rock, sand road, green meadows
+    "earth": C("#b8693b"),
+    "earth_dark": C("#8a4a2c"),
+    "earth_light": C("#d58f55"),
+    "cliff": C("#7b4a3a"),
+    "sand": C("#e3b57c"),
+    "sand_dark": C("#c28d57"),
+    "grass": C("#6f9e3b"),
+    "grass_dark": C("#4b7a30"),
+    "grass_light": C("#9bbd4f"),
+    "plaza": C("#8f6a58"),
+    "plaza_dark": C("#6f4f44"),
     # structures
-    "white": C("#f1effa"),
-    "stone": C("#c9c6e6"),
-    "metal": C("#aeb3cf"),
-    "metal_dark": C("#5d6283"),
-    "slate": C("#2c2c4d"),
-    "slate_light": C("#3b3b63"),
-    "navy": C("#16183a"),
-    "glass": C("#244a7a"),
+    "white": C("#ece9f2"),
+    "cream": C("#e6d3b8"),
+    "stone": C("#cda57b"),
+    "stone_dark": C("#9b7456"),
+    "brick": C("#a85a3a"),
+    "roof": C("#5a3a3f"),
+    "metal": C("#b7bccf"),
+    "gunmetal": C("#4a4f66"),
+    "iron": C("#2f3347"),
+    "navy": C("#1a1d3a"),
+    "glass": C("#2b4f86"),
     # accents (match the site palette)
     "orange": C("#ff8a3d"),
-    "orange_deep": C("#e2561f"),
+    "orange_deep": C("#d9501e"),
     "cyan": C("#3ddcff"),
+    "blue": C("#3a7bff"),
     "magenta": C("#d95cff"),
     "violet": C("#915eff"),
     "yellow": C("#ffd166"),
     "red": C("#ff4d6d"),
-    "panel": C("#2c4fc0"),
-    "panel_light": C("#6f8cf0"),
+    "panel": C("#2a4cb8"),
+    "panel_light": C("#7d98f0"),
     # nature
-    "rock": C("#6e6c97"),
-    "rock_dark": C("#4b4a76"),
-    "rock_light": C("#9c99c4"),
-    "trunk": C("#6b4a5e"),
-    "leaf_pink": C("#ff7ad9"),
-    "leaf_teal": C("#2fd6b4"),
-    "leaf_amber": C("#ffb35c"),
-    "leaf_violet": C("#a77bff"),
-    "grass": C("#38c9b0"),
-    "grass_dark": C("#27957f"),
-    "mushroom": C("#ff6b8a"),
+    "rock": C("#8a6a5c"),
+    "rock_dark": C("#5c4540"),
+    "rock_light": C("#b08c78"),
+    "trunk": C("#6b4630"),
+    "leaf_green": C("#4f8f34"),
+    "leaf_lime": C("#8fb93f"),
+    "leaf_teal": C("#2f9f86"),
+    "leaf_amber": C("#e09a3a"),
+    "leaf_pink": C("#e8688f"),
+    "mushroom": C("#e0553d"),
+    # character
+    "skin": C("#e8b48c"),
+    "hair": C("#2b1d1a"),
+    "jacket": C("#c46f3a"),
+    "pants": C("#3b4258"),
 }
 
 GLOW_COLORS = {
     "cyan": "#3ddcff",
+    "blue": "#3a8bff",
     "orange": "#ff8a3d",
+    "amber": "#ffb04a",
     "magenta": "#d95cff",
     "violet": "#915eff",
     "yellow": "#ffd166",
-    "white": "#f4f1ff",
+    "white": "#fff6e8",
     "red": "#ff4d6d",
+    "green": "#6bff9c",
 }
 
 # ------------------------------------------------------------- materials ---
 
 _materials = {}
 
+SURFACES = {
+    # key: (roughness, metallic)
+    "lit": (0.85, 0.0),
+    "paint": (0.4, 0.2),
+    "metal": (0.32, 0.85),
+}
 
-def _make_lit():
-    mat = bpy.data.materials.new("Lit")
+
+def _make_surface(key):
+    rough, metal = SURFACES[key]
+    mat = bpy.data.materials.new(key.capitalize())
     mat.use_nodes = True
     mat.use_backface_culling = False
     nodes, links = mat.node_tree.nodes, mat.node_tree.links
@@ -93,8 +116,8 @@ def _make_lit():
     attr = nodes.new("ShaderNodeVertexColor")
     attr.layer_name = "Col"
     links.new(attr.outputs["Color"], bsdf.inputs["Base Color"])
-    bsdf.inputs["Roughness"].default_value = 0.85
-    bsdf.inputs["Metallic"].default_value = 0.0
+    bsdf.inputs["Roughness"].default_value = rough
+    bsdf.inputs["Metallic"].default_value = metal
     return mat
 
 
@@ -104,16 +127,16 @@ def _make_glow(name, hex_color):
     mat.use_backface_culling = False
     bsdf = mat.node_tree.nodes["Principled BSDF"]
     rgb = C(hex_color)
-    bsdf.inputs["Base Color"].default_value = (rgb[0] * 0.25, rgb[1] * 0.25, rgb[2] * 0.25, 1)
+    bsdf.inputs["Base Color"].default_value = (rgb[0] * 0.2, rgb[1] * 0.2, rgb[2] * 0.2, 1)
     bsdf.inputs["Emission Color"].default_value = (*rgb, 1)
     bsdf.inputs["Emission Strength"].default_value = 1.0
-    bsdf.inputs["Roughness"].default_value = 0.6
+    bsdf.inputs["Roughness"].default_value = 0.5
     return mat
 
 
 def material(key):
     if key not in _materials:
-        _materials[key] = _make_lit() if key == "lit" else _make_glow(
+        _materials[key] = _make_surface(key) if key in SURFACES else _make_glow(
             "Glow_" + key, GLOW_COLORS[key]
         )
     return _materials[key]
@@ -144,13 +167,18 @@ def clamp01(x):
     return max(0.0, min(1.0, x))
 
 
+def mix(a, b, t):
+    t = clamp01(t)
+    return tuple(a[i] + (b[i] - a[i]) * t for i in range(3))
+
+
 # ----------------------------------------------------------- mesh builder ---
 
 
 class Mesh:
-    """A bmesh that collects primitives, all painted with per-face vertex colors."""
+    """A bmesh that collects primitives, all painted with per-vertex colors."""
 
-    def __init__(self, name, mat_key="lit", ao=(0.0, 5.0, 0.7, 1.05), jitter=0.04, seed=1):
+    def __init__(self, name, mat_key="lit", ao=(0.0, 6.0, 0.86, 1.0), jitter=0.025, seed=1):
         self.name = name
         self.mat_key = mat_key
         self.bm = bmesh.new()
@@ -171,10 +199,14 @@ class Mesh:
             bmesh.ops.recalc_face_normals(bm, faces=new)
         grad = self.ao if grad is None else grad
         jit = self.jitter if jitter is None else jitter
+        shade = {}
         for f in new:
-            m = 1.0 + self.rng.uniform(-jit, jit)
+            for v in f.verts:
+                if v not in shade:
+                    shade[v] = 1.0 + self.rng.uniform(-jit, jit)
+        for f in new:
             for loop in f.loops:
-                k = m
+                k = shade[loop.vert]
                 if grad:
                     z0, z1, dark, light = grad
                     t = clamp01((loop.vert.co.z - z0) / (z1 - z0))
@@ -184,22 +216,16 @@ class Mesh:
             verts = list({v for f in new for v in f.verts})
             bmesh.ops.transform(bm, matrix=base, verts=verts)
 
-    @staticmethod
-    def _m(pos, rotation, extra=None):
-        m = tr(*pos) @ rot(*rotation)
-        return m if extra is None else m @ extra
-
     # -- primitives (pos = bottom centre unless noted) ------------------------
     def box(self, size, pos=(0, 0, 0), rotation=(0, 0, 0), color=None, grad=None,
             jitter=None, base=None, center=False):
         sx, sy, sz = size
         lift = 0.0 if center else sz / 2
-        # rotate around `pos` (the bottom centre unless center=True)
         m = tr(*pos) @ rot(*rotation) @ tr(0, 0, lift) @ Matrix.Diagonal((sx, sy, sz, 1.0))
         res = bmesh.ops.create_cube(self.bm, size=1.0, matrix=m, calc_uvs=False)
         self._finish(self._faces_of(res["verts"]), color or P["metal"], grad, jitter, base)
 
-    def cyl(self, r1, r2=None, h=1.0, pos=(0, 0, 0), rotation=(0, 0, 0), segs=8,
+    def cyl(self, r1, r2=None, h=1.0, pos=(0, 0, 0), rotation=(0, 0, 0), segs=20,
             color=None, grad=None, jitter=None, base=None, center=False, caps=True):
         r2 = r1 if r2 is None else r2
         lift = 0.0 if center else h / 2
@@ -208,18 +234,22 @@ class Mesh:
                                     radius1=r1, radius2=r2, depth=h, matrix=m, calc_uvs=False)
         self._finish(self._faces_of(res["verts"]), color or P["metal"], grad, jitter, base)
 
-    def ball(self, r, pos=(0, 0, 0), subdiv=1, scale=(1, 1, 1), rotation=(0, 0, 0),
-             color=None, grad=None, jitter=None, base=None, noise=0.0):
+    def ball(self, r, pos=(0, 0, 0), subdiv=3, scale=(1, 1, 1), rotation=(0, 0, 0),
+             color=None, grad=None, jitter=None, base=None, lump=0.0, lump_freq=1.3):
+        """Icosphere; `lump` adds smooth coherent bumps (rocks, canopies, clouds)."""
         m = tr(*pos) @ rot(*rotation) @ Matrix.Diagonal((*scale, 1.0))
         res = bmesh.ops.create_icosphere(self.bm, subdivisions=subdiv, radius=r, matrix=m,
                                          calc_uvs=False)
-        if noise:
+        if lump:
+            seed = Vector((self.rng.uniform(0, 50), self.rng.uniform(0, 50), self.rng.uniform(0, 50)))
             centre = Vector(pos)
             for v in res["verts"]:
-                v.co += (v.co - centre).normalized() * self.rng.uniform(-noise, noise) * r
+                d = v.co - centre
+                n = noise.noise(d.normalized() * lump_freq + seed)
+                v.co = centre + d * (1.0 + n * lump)
         self._finish(self._faces_of(res["verts"]), color or P["rock"], grad, jitter, base)
 
-    def lathe(self, profile, pos=(0, 0, 0), rotation=(0, 0, 0), segs=8, color=None,
+    def lathe(self, profile, pos=(0, 0, 0), rotation=(0, 0, 0), segs=24, color=None,
               grad=None, jitter=None, base=None, caps=True):
         """Revolve [(radius, z), ...] (bottom to top) around Z."""
         bm = self.bm
@@ -266,7 +296,7 @@ class Mesh:
             made.append(bm.faces.new((low[i], low[j], high[j], high[i])))
         self._finish(made, color or P["metal"], grad, jitter, base)
 
-    def torus(self, R, r, pos=(0, 0, 0), rotation=(0, 0, 0), major=16, minor=6, arc=360.0,
+    def torus(self, R, r, pos=(0, 0, 0), rotation=(0, 0, 0), major=40, minor=10, arc=360.0,
               start=0.0, color=None, grad=None, jitter=None, base=None):
         bm = self.bm
         made = []
@@ -284,7 +314,6 @@ class Mesh:
                 row.append(bm.verts.new(m @ Vector((rr * math.cos(a), rr * math.sin(a),
                                                     r * math.sin(b)))))
             grid.append(row)
-        last = major if full else major
         for i in range(major):
             i2 = (i + 1) % steps if full else i + 1
             for j in range(minor):
@@ -292,7 +321,7 @@ class Mesh:
                 made.append(bm.faces.new((grid[i][j], grid[i2][j], grid[i2][j2], grid[i][j2])))
         self._finish(made, color or P["metal"], grad, jitter, base, fix_normals=full)
 
-    def tube(self, a, b, r=0.08, segs=4, color=None, grad=None, jitter=None, base=None):
+    def tube(self, a, b, r=0.08, segs=8, color=None, grad=None, jitter=None, base=None):
         """A thin strut between two points."""
         a, b = Vector(a), Vector(b)
         d = b - a
@@ -304,10 +333,25 @@ class Mesh:
         res = bmesh.ops.create_cone(self.bm, cap_ends=True, cap_tris=False, segments=segs,
                                     radius1=r, radius2=r, depth=length, matrix=m,
                                     calc_uvs=False)
-        self._finish(self._faces_of(res["verts"]), color or P["metal_dark"], grad, jitter, base)
+        self._finish(self._faces_of(res["verts"]), color or P["gunmetal"], grad, jitter, base)
+
+    def capsule(self, r, length, pos=(0, 0, 0), rotation=(0, 0, 0), segs=16, color=None,
+                grad=None, jitter=None, base=None):
+        """Pill shape standing on `pos`, total height = length + 2r."""
+        prof = [(0.0, 0.0)]
+        for t in range(1, 6):
+            a = math.radians(90 - t * 15)
+            prof.append((r * math.cos(a), r - r * math.sin(a)))
+        for t in range(0, 6):
+            a = math.radians(t * 15)
+            prof.append((r * math.cos(a), r + length + r * math.sin(a)))
+        prof.append((0.0, 2 * r + length))
+        self.lathe(prof, pos, rotation, segs=segs, color=color, grad=grad, jitter=jitter,
+                   base=base, caps=False)
 
     # -- output ------------------------------------------------------------------
-    def to_object(self, parent=None, location=(0, 0, 0), name=None):
+    def to_object(self, parent=None, location=(0, 0, 0), name=None, bevel=0.0,
+                  smooth_angle=45.0):
         if not self.bm.faces:
             return None
         me = bpy.data.meshes.new((name or self.name) + "_mesh")
@@ -318,25 +362,46 @@ class Mesh:
         bpy.context.scene.collection.objects.link(ob)
         if parent is not None:
             ob.parent = parent
+        finalize(ob, bevel, smooth_angle)
         return ob
 
     def free(self):
         self.bm.free()
 
 
-class Group:
-    """One lit mesh plus one mesh per glow colour; exported under a shared empty."""
+def finalize(ob, bevel=0.0, smooth_angle=45.0):
+    """Bevel sharp edges, then shade smooth except across sharp angles."""
+    view = bpy.context.view_layer
+    view.objects.active = ob
+    bpy.ops.object.select_all(action="DESELECT")
+    ob.select_set(True)
+    if bevel > 0:
+        mod = ob.modifiers.new("Bevel", "BEVEL")
+        mod.width = bevel
+        mod.segments = 2
+        mod.limit_method = "ANGLE"
+        mod.angle_limit = math.radians(30)
+        mod.harden_normals = False
+        bpy.ops.object.modifier_apply(modifier=mod.name)
+    bpy.ops.object.shade_smooth_by_angle(angle=math.radians(smooth_angle))
+    ob.select_set(False)
 
-    def __init__(self, name, ao=(0.0, 5.0, 0.7, 1.05), seed=1):
+
+class Group:
+    """One lit mesh, optional paint/metal meshes, and one mesh per glow colour."""
+
+    def __init__(self, name, ao=(0.0, 6.0, 0.86, 1.0), seed=1, bevel=0.035):
         self.name = name
-        self.lit = Mesh(name + "_lit", "lit", ao=ao, seed=seed)
-        self.glow = {}
+        self.bevel = bevel
         self._seed = seed
         self._ao = ao
+        self.lit = Mesh(name + "_lit", "lit", ao=ao, seed=seed)
+        self.paint = Mesh(name + "_paint", "paint", ao=ao, seed=seed + 1)
+        self.metal = Mesh(name + "_metal", "metal", ao=ao, seed=seed + 2)
+        self.glow = {}
 
     def g(self, key):
         if key not in self.glow:
-            # glow parts are flat colour, no darkening
             self.glow[key] = Mesh(f"{self.name}_glow_{key}", key, ao=False, jitter=0.0,
                                   seed=self._seed)
         return self.glow[key]
@@ -345,13 +410,86 @@ class Group:
         root = bpy.data.objects.new(self.name, None)
         root.location = location
         bpy.context.scene.collection.objects.link(root)
-        self.lit.to_object(parent=root)
-        for key, mesh in self.glow.items():
-            mesh.to_object(parent=root)
-        self.lit.free()
+        for mesh in (self.lit, self.paint, self.metal):
+            mesh.to_object(parent=root, bevel=self.bevel)
+            mesh.free()
         for mesh in self.glow.values():
+            mesh.to_object(parent=root, bevel=0.0)
             mesh.free()
         return root
+
+
+# ----------------------------------------------------------- baked occlusion ---
+
+
+def _hemisphere(n):
+    """Cosine-weighted directions around +Z."""
+    out = []
+    for i in range(n):
+        u = (i + 0.5) / n
+        v, f, k = 0.0, 0.5, i + 1  # radical inverse, base 2
+        while k:
+            v += f * (k & 1)
+            k >>= 1
+            f *= 0.5
+        r = math.sqrt(u)
+        phi = math.tau * v
+        out.append(Vector((r * math.cos(phi), r * math.sin(phi), math.sqrt(max(0.0, 1 - u)))))
+    return out
+
+
+def bake_ao(targets, occluders=(), samples=20, max_dist=2.5, floor=0.45, seed=7):
+    """Multiply per-vertex ambient occlusion into each target mesh's colors.
+
+    `targets` are mesh objects to darken; `occluders` only block light (e.g. the ground).
+    Glow meshes (names containing "_glow_") are left untouched.
+    """
+    bpy.context.view_layer.update()
+    pool = []
+    for ob in list(targets) + list(occluders):
+        if ob.type == "MESH" and ob not in pool:
+            pool.append(ob)
+
+    verts, polys = [], []
+    for ob in pool:
+        me, mw = ob.data, ob.matrix_world
+        base = len(verts)
+        verts.extend(mw @ v.co for v in me.vertices)
+        polys.extend([base + i for i in p.vertices] for p in me.polygons)
+    bvh = BVHTree.FromPolygons(verts, polys)
+
+    rng = random.Random(seed)
+    dirs = _hemisphere(samples)
+    for ob in targets:
+        if ob.type != "MESH" or "_glow_" in ob.name:
+            continue
+        me, mw = ob.data, ob.matrix_world
+        attr = me.color_attributes.get("Col")
+        if attr is None:
+            continue
+        nmat = mw.to_3x3()
+        ao = np.ones(len(me.vertices), dtype=np.float32)
+        for vi, v in enumerate(me.vertices):
+            n = (nmat @ v.normal).normalized()
+            p = mw @ v.co + n * 0.02
+            q = Vector((0, 0, 1)).rotation_difference(n) @ Quaternion((0, 0, 1), rng.uniform(0, math.tau))
+            hits = 0
+            for d in dirs:
+                if bvh.ray_cast(p, q @ d, max_dist)[0] is not None:
+                    hits += 1
+            ao[vi] = 1.0 - (hits / samples)
+        # soften and lift: `floor` is the darkest allowed multiplier
+        factor = floor + (1.0 - floor) * np.sqrt(ao)
+
+        loops = len(me.loops)
+        vidx = np.empty(loops, dtype=np.int32)
+        me.loops.foreach_get("vertex_index", vidx)
+        cols = np.empty(loops * 4, dtype=np.float32)
+        attr.data.foreach_get("color", cols)
+        cols = cols.reshape(-1, 4)
+        cols[:, :3] *= factor[vidx][:, None]
+        attr.data.foreach_set("color", cols.ravel())
+        me.update()
 
 
 def glow_color(key):
