@@ -10,6 +10,7 @@ import { Shards, Zones } from "../game/Landmarks";
 import Hud from "../game/Hud";
 import Lighting from "../game/Lighting";
 import Sky from "../game/Sky";
+import Fireflies from "../game/Fireflies";
 import ZoneCard from "../game/ZoneCard";
 import CanvasLoader from "../components/Loader";
 
@@ -66,12 +67,13 @@ const PlayGame = () => {
         camera={{ fov: 55, near: 0.1, far: 1800, position: [46, 6, -10] }}
         gl={{ antialias: false, powerPreference: "high-performance" }}
       >
-        <color attach="background" args={["#2a1840"]} />
-        <fog attach="fog" args={["#6b3f6e", 90, 380]} />
+        <color attach="background" args={["#050818"]} />
+        <fog attach="fog" args={["#070d26", 90, 380]} />
 
         <Suspense fallback={<CanvasLoader radius={6} />}>
           <Lighting />
           <Sky />
+          <Fireflies />
           <Planet ref={planetRef} />
           <Zones planetRef={planetRef} />
           <Shards />
@@ -81,11 +83,11 @@ const PlayGame = () => {
         <EffectComposer multisampling={4}>
           <Bloom
             mipmapBlur
-            intensity={0.85}
-            luminanceThreshold={0.9}
+            intensity={0.9}
+            luminanceThreshold={0.85}
             luminanceSmoothing={0.25}
           />
-          <Vignette eskil={false} offset={0.25} darkness={0.55} />
+          <Vignette eskil={false} offset={0.25} darkness={0.7} />
           <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
         </EffectComposer>
       </Canvas>

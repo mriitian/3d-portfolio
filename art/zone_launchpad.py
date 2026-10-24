@@ -122,3 +122,7 @@ def build():
                        (-0.5, 2.0, 0.8, 0.55), (1.3, 1.6, 0.8, 0.6)):
         smoke_puff(g, x, y, z, r)
     return g.build()
+
+
+# solid parts, as (x, y, radius) in this zone's own frame; the game stops the rover at these
+COLLIDERS = [(0, 0, 3.1), (3.5, 3.5, 1.5), (-4.9, 1.6, 1.1), (-4.0, -3.4, 1.25), (-2.1, -4.7, 1.05), (1.0, -4.8, 1.4), (3.0, -5.0, 1.4)]

@@ -67,6 +67,32 @@ def meshes_of(root):
     return [ob for ob in [root, *root.children_recursive] if ob.type == "MESH"]
 
 
+def write_obstacles(out_dir):
+    """Positions of everything solid, in the game's (three.js) coordinates."""
+    import json
+    import math
+
+    from mathutils import Vector
+
+    import world_planet as wp
+
+    items = []
+    for d, r in wp.SOLIDS:
+        items.append([round(d.x, 4), round(d.z, 4), round(-d.y, 4), round(r, 2)])
+    for zid, lat, lon in wp.ZONE_DEFS:
+        la, lo = math.radians(lat), math.radians(lon)
+        dir_t = Vector((math.cos(la) * math.cos(lo), math.sin(la), math.cos(la) * math.sin(lo)))
+        q = Vector((0, 1, 0)).rotation_difference(dir_t)
+        mod = importlib.import_module(ZONE_MODULES[zid])
+        for x, y, r in mod.COLLIDERS:
+            p = (dir_t * wp.R + q @ Vector((x, 0, -y))).normalized()
+            items.append([round(p.x, 4), round(p.y, 4), round(p.z, 4), round(r, 2)])
+    path = os.path.join(out_dir, "obstacles.json")
+    with open(path, "w") as fh:
+        json.dump(items, fh, separators=(",", ":"))
+    print("OBSTACLES", len(items), path)
+
+
 def make_ground(radius, color=None):
     """A flat disc used as an occluder (and preview floor); never exported."""
     disc = Mesh("_ground", ao=False, jitter=0)
@@ -138,6 +164,8 @@ def main():
     if args.out and roots:
         os.makedirs(args.out, exist_ok=True)
         export(os.path.join(args.out, "world.glb"), roots)
+        if args.only == "all":
+            write_obstacles(args.out)
 
 
 main()

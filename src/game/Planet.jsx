@@ -32,6 +32,7 @@ const Planet = forwardRef(function Planet(_, ref) {
 
   useMemo(() => {
     prepare(nodes.Planet, { cast: false });
+    prepare(nodes.Road, { cast: false });
     scatter.forEach((name) => prepare(nodes[name]));
     prepare(nodes.Moon, { cast: false });
     for (let i = 0; i < 4; i++) prepare(nodes[`FloatRock_${i}`]);
@@ -45,6 +46,7 @@ const Planet = forwardRef(function Planet(_, ref) {
   return (
     <>
       <primitive ref={ref} object={nodes.Planet} />
+      <primitive object={nodes.Road} />
       {scatter.map((name) => (
         <primitive key={name} object={nodes[name]} />
       ))}
